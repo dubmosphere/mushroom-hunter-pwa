@@ -1,47 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
-import MapLayerControl, { SwissTileLayer, SWISS_BOUNDS, SWISS_MIN_ZOOM, SWISS_MAX_ZOOM } from '../components/MapLayerControl';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-
-// Fix for default marker icons in React Leaflet
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-// Custom marker colors based on edibility
-const getMarkerIcon = (edibility) => {
-  const colors = {
-    edible: '#10b981',
-    poisonous: '#ef4444',
-    inedible: '#6b7280',
-    medicinal: '#3b82f6',
-    psychoactive: '#a855f7',
-    unknown: '#9ca3af',
-  };
-
-  const color = colors[edibility] || colors.unknown;
-
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="background-color: ${color}; width: 25px; height: 25px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-  });
-};
+import SwissMap from '../components/SwissMap';
+import { wgs84ToLV95 } from '../utils/projections';
 
 function FindingsMap() {
-  const [center, setCenter] = useState([46.8182, 8.2275]); // Center of Switzerland
-  const [userLocation, setUserLocation] = useState(null);
-  const [mapLayer, setMapLayer] = useState('color');
+  const [center] = useState(() => wgs84ToLV95(46.8182, 8.2275)); // Center of Switzerland in LV95
 
   const { data: findings, isLoading } = useQuery({
     queryKey: ['findings', 'map'],
@@ -51,21 +18,6 @@ function FindingsMap() {
     },
   });
 
-  useEffect(() => {
-    // Get user's current location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const location = [position.coords.latitude, position.coords.longitude];
-          setUserLocation(location);
-          setCenter(location);
-        },
-        (error) => {
-          console.log('Error getting location:', error);
-        }
-      );
-    }
-  }, []);
 
   if (isLoading) {
     return (
@@ -115,75 +67,11 @@ function FindingsMap() {
       {/* Map */}
       <div className="card p-0 overflow-hidden">
         <div style={{ height: '600px', width: '100%', position: 'relative' }}>
-          <MapContainer
+          <SwissMap
             center={center}
-            zoom={8}
-            minZoom={SWISS_MIN_ZOOM}
-            maxZoom={SWISS_MAX_ZOOM}
-            maxBounds={SWISS_BOUNDS}
-            maxBoundsViscosity={1.0}
+            zoom={3}
             style={{ height: '100%', width: '100%' }}
-          >
-            <SwissTileLayer layer={mapLayer} />
-            <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
-
-            {/* User's current location */}
-            {userLocation && (
-              <Marker position={userLocation}>
-                <Popup>
-                  <strong>Your current location</strong>
-                </Popup>
-              </Marker>
-            )}
-
-            {/* Findings markers */}
-            {findings?.map((finding) => (
-              <Marker
-                key={finding.id}
-                position={[parseFloat(finding.latitude), parseFloat(finding.longitude)]}
-                icon={getMarkerIcon(finding.species?.edibility)}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <Link
-                      to={`/species/${finding.species.id}`}
-                      className="font-semibold text-primary-700 dark:text-primary-400 hover:text-primary-800 italic block mb-1"
-                    >
-                      {finding.species.scientificName}
-                    </Link>
-                    {finding.species.commonName && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {finding.species.commonName}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {format(new Date(finding.foundAt), 'PPP')}
-                    </p>
-                    {finding.location && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{finding.location}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                        finding.species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                        finding.species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                      }`}>
-                        {finding.species.edibility}
-                      </span>
-                      <Link
-                        to={`/findings/${finding.id}`}
-                        className="btn-secondary text-xs flex items-center gap-1 px-2 py-1"
-                        title="View details"
-                      >
-                        <Eye size={14} />
-                        Details
-                      </Link>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          />
         </div>
       </div>
 

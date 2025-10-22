@@ -12,21 +12,21 @@ export const SWISS_BOUNDS = [
 export const SWISS_MIN_ZOOM = 7;
 export const SWISS_MAX_ZOOM = 19;
 
-// Swiss Federal Geoportal tile layers
+// Swiss Federal Geoportal tile layers (using EPSG:2056 LV95)
 export const SWISS_LAYERS = {
   color: {
     name: 'Color Map',
-    url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',
+    url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/2056/{z}/{x}/{y}.jpeg',
     attribution: '&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',
   },
   grey: {
     name: 'Grey Map',
-    url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/3857/{z}/{x}/{y}.jpeg',
+    url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-grau/default/current/2056/{z}/{x}/{y}.jpeg',
     attribution: '&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',
   },
   aerial: {
     name: 'Aerial Imagery',
-    url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg',
+    url: 'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/2056/{z}/{x}/{y}.jpeg',
     attribution: '&copy; <a href="https://www.swisstopo.admin.ch">swisstopo</a>',
   },
 };

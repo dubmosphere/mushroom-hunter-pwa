@@ -2,21 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { MapContainer, Marker, useMapEvents } from 'react-leaflet';
 import { ArrowLeft, MapPin, Map as MapIcon } from 'lucide-react';
 import { findingsAPI, speciesAPI } from '../utils/api';
-import MapLayerControl, { SwissTileLayer, SWISS_BOUNDS, SWISS_MIN_ZOOM, SWISS_MAX_ZOOM } from '../components/MapLayerControl';
-
-// Component to handle map clicks
-function MapClickHandler({ onLocationSelect }) {
-  useMapEvents({
-    click: async (e) => {
-      const { lat, lng } = e.latlng;
-      onLocationSelect(lat, lng);
-    },
-  });
-  return null;
-}
+import SwissMap from '../components/SwissMap';
+import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
 
 function AddFinding() {
   const navigate = useNavigate();
@@ -24,8 +13,7 @@ function AddFinding() {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [mapPosition, setMapPosition] = useState([46.8182, 8.2275]); // Switzerland center
-  const [mapLayer, setMapLayer] = useState('color');
+  const [mapPosition, setMapPosition] = useState(() => wgs84ToLV95(46.8182, 8.2275)); // Switzerland center in LV95
 
   const {
     register,
@@ -119,16 +107,18 @@ function AddFinding() {
     }
   };
 
-  const handleMapLocationSelect = async (lat, lng) => {
+  const handleMapLocationSelect = async (coordinate) => {
+    // coordinate is [east, north] in LV95, convert to WGS84
+    const [lat, lon] = lv95ToWGS84(coordinate[0], coordinate[1]);
     const latFixed = lat.toFixed(8);
-    const lonFixed = lng.toFixed(8);
+    const lonFixed = lon.toFixed(8);
 
     setValue('latitude', latFixed);
     setValue('longitude', lonFixed);
-    setMapPosition([lat, lng]);
+    setMapPosition(coordinate); // Store LV95 coordinates for map
 
     // Try to get location name
-    const locationName = await reverseGeocode(lat, lng);
+    const locationName = await reverseGeocode(lat, lon);
     if (locationName) {
       setValue('location', locationName);
     }
@@ -148,7 +138,10 @@ function AddFinding() {
 
         setValue('latitude', lat);
         setValue('longitude', lon);
-        setMapPosition([position.coords.latitude, position.coords.longitude]);
+
+        // Convert to LV95 for map display
+        const lv95Coords = wgs84ToLV95(position.coords.latitude, position.coords.longitude);
+        setMapPosition(lv95Coords);
 
         // Try to get location name
         const locationName = await reverseGeocode(lat, lon);
@@ -331,27 +324,12 @@ function AddFinding() {
                   Click on the map to set the location
                 </div>
                 <div style={{ height: '400px', position: 'relative' }}>
-                  <MapContainer
+                  <SwissMap
                     center={mapPosition}
-                    zoom={13}
-                    minZoom={SWISS_MIN_ZOOM}
-                    maxZoom={SWISS_MAX_ZOOM}
-                    maxBounds={SWISS_BOUNDS}
-                    maxBoundsViscosity={1.0}
+                    zoom={8}
+                    onMapClick={handleMapLocationSelect}
                     style={{ height: '100%', width: '100%' }}
-                  >
-                    <SwissTileLayer layer={mapLayer} />
-                    <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
-                    <MapClickHandler onLocationSelect={handleMapLocationSelect} />
-                    {watch('latitude') && watch('longitude') && (
-                      <Marker
-                        position={[
-                          parseFloat(watch('latitude')) || mapPosition[0],
-                          parseFloat(watch('longitude')) || mapPosition[1]
-                        ]}
-                      />
-                    )}
-                  </MapContainer>
+                  />
                 </div>
               </div>
             )}

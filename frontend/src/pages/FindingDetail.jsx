@@ -1,40 +1,15 @@
-import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { ArrowLeft, MapPin, Calendar, Thermometer, Cloud, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
-import MapLayerControl, { SwissTileLayer, SWISS_BOUNDS, SWISS_MIN_ZOOM, SWISS_MAX_ZOOM } from '../components/MapLayerControl';
-import L from 'leaflet';
-
-// Custom marker icon
-const createMarkerIcon = (edibility) => {
-  const colors = {
-    edible: '#10b981',
-    poisonous: '#ef4444',
-    inedible: '#6b7280',
-    medicinal: '#3b82f6',
-    psychoactive: '#8b5cf6',
-    unknown: '#f59e0b',
-  };
-
-  const color = colors[edibility] || colors.unknown;
-
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30],
-  });
-};
+import SwissMap from '../components/SwissMap';
+import { wgs84ToLV95 } from '../utils/projections';
 
 function FindingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [mapLayer, setMapLayer] = useState('color');
 
   const { data: finding, isLoading, error } = useQuery({
     queryKey: ['finding', id],
@@ -232,33 +207,11 @@ function FindingDetail() {
             <h2 className="text-xl font-bold">Location on Map</h2>
           </div>
           <div style={{ height: '400px', position: 'relative' }}>
-            <MapContainer
-              center={[parseFloat(finding.latitude), parseFloat(finding.longitude)]}
-              zoom={15}
+            <SwissMap
+              center={wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude))}
+              zoom={12}
               style={{ height: '100%', width: '100%' }}
-            >
-              <SwissTileLayer layer={mapLayer} />
-              <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
-              <Marker
-                position={[parseFloat(finding.latitude), parseFloat(finding.longitude)]}
-                icon={createMarkerIcon(finding.species.edibility)}
-              >
-                <Popup>
-                  <div className="text-sm">
-                    <p className="font-bold italic">{finding.species.scientificName}</p>
-                    {finding.species.commonName && (
-                      <p className="text-gray-600 dark:text-gray-400">{finding.species.commonName}</p>
-                    )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {format(new Date(finding.foundAt), 'PPP')}
-                    </p>
-                    {finding.location && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{finding.location}</p>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            </MapContainer>
+            />
           </div>
         </div>
       </div>
