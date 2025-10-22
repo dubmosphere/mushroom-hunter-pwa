@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
 import 'leaflet/dist/leaflet.css';
@@ -167,9 +168,11 @@ function FindingsMap() {
                       </span>
                       <Link
                         to={`/findings/${finding.id}`}
-                        className="text-xs text-primary-600 hover:text-primary-700 font-medium underline"
+                        className="btn-secondary text-xs flex items-center gap-1 px-2 py-1"
+                        title="View details"
                       >
-                        View Details
+                        <Eye size={14} />
+                        Details
                       </Link>
                     </div>
                   </div>

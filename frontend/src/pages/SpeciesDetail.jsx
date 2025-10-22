@@ -275,9 +275,11 @@ function SpeciesDetail() {
                         )}
                         <Link
                           to={`/findings/${finding.id}`}
-                          className="text-xs text-primary-600 hover:text-primary-700 font-medium underline mt-2 block"
+                          className="btn-secondary text-xs flex items-center gap-1 px-2 py-1"
+                          title="View details"
                         >
-                          View Details
+                          <Eye size={14} />
+                          Details
                         </Link>
                       </div>
                     </Popup>
