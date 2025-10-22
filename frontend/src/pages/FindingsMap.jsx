@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
+import MapLayerControl, { SwissTileLayer, SWISS_BOUNDS, SWISS_MIN_ZOOM, SWISS_MAX_ZOOM } from '../components/MapLayerControl';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -40,6 +41,7 @@ const getMarkerIcon = (edibility) => {
 function FindingsMap() {
   const [center, setCenter] = useState([46.8182, 8.2275]); // Center of Switzerland
   const [userLocation, setUserLocation] = useState(null);
+  const [mapLayer, setMapLayer] = useState('color');
 
   const { data: findings, isLoading } = useQuery({
     queryKey: ['findings', 'map'],
@@ -112,16 +114,18 @@ function FindingsMap() {
 
       {/* Map */}
       <div className="card p-0 overflow-hidden">
-        <div style={{ height: '600px', width: '100%' }}>
+        <div style={{ height: '600px', width: '100%', position: 'relative' }}>
           <MapContainer
             center={center}
             zoom={8}
+            minZoom={SWISS_MIN_ZOOM}
+            maxZoom={SWISS_MAX_ZOOM}
+            maxBounds={SWISS_BOUNDS}
+            maxBoundsViscosity={1.0}
             style={{ height: '100%', width: '100%' }}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+            <SwissTileLayer layer={mapLayer} />
+            <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
 
             {/* User's current location */}
             {userLocation && (

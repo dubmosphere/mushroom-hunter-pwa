@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, useMapEvents } from 'react-leaflet';
 import { ArrowLeft, MapPin, Map as MapIcon } from 'lucide-react';
 import { findingsAPI, speciesAPI } from '../utils/api';
+import MapLayerControl, { SwissTileLayer, SWISS_BOUNDS, SWISS_MIN_ZOOM, SWISS_MAX_ZOOM } from '../components/MapLayerControl';
 
 // Component to handle map clicks
 function MapClickHandler({ onLocationSelect }) {
@@ -24,6 +25,7 @@ function AddFinding() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showMap, setShowMap] = useState(false);
   const [mapPosition, setMapPosition] = useState([46.8182, 8.2275]); // Switzerland center
+  const [mapLayer, setMapLayer] = useState('color');
 
   const {
     register,
@@ -328,16 +330,18 @@ function AddFinding() {
                 <div className="bg-primary-50 dark:bg-primary-900/20 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">
                   Click on the map to set the location
                 </div>
-                <div style={{ height: '400px' }}>
+                <div style={{ height: '400px', position: 'relative' }}>
                   <MapContainer
                     center={mapPosition}
                     zoom={13}
+                    minZoom={SWISS_MIN_ZOOM}
+                    maxZoom={SWISS_MAX_ZOOM}
+                    maxBounds={SWISS_BOUNDS}
+                    maxBoundsViscosity={1.0}
                     style={{ height: '100%', width: '100%' }}
                   >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
+                    <SwissTileLayer layer={mapLayer} />
+                    <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
                     <MapClickHandler onLocationSelect={handleMapLocationSelect} />
                     {watch('latitude') && watch('longitude') && (
                       <Marker

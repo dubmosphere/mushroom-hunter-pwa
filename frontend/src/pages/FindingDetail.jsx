@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { ArrowLeft, MapPin, Calendar, Thermometer, Cloud, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
+import MapLayerControl, { SwissTileLayer, SWISS_BOUNDS, SWISS_MIN_ZOOM, SWISS_MAX_ZOOM } from '../components/MapLayerControl';
 import L from 'leaflet';
 
 // Custom marker icon
@@ -32,6 +34,7 @@ function FindingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [mapLayer, setMapLayer] = useState('color');
 
   const { data: finding, isLoading, error } = useQuery({
     queryKey: ['finding', id],
@@ -228,16 +231,14 @@ function FindingDetail() {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-bold">Location on Map</h2>
           </div>
-          <div style={{ height: '400px' }}>
+          <div style={{ height: '400px', position: 'relative' }}>
             <MapContainer
               center={[parseFloat(finding.latitude), parseFloat(finding.longitude)]}
               zoom={15}
               style={{ height: '100%', width: '100%' }}
             >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <SwissTileLayer layer={mapLayer} />
+              <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
               <Marker
                 position={[parseFloat(finding.latitude), parseFloat(finding.longitude)]}
                 icon={createMarkerIcon(finding.species.edibility)}

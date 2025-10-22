@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { ArrowLeft, MapPin, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { speciesAPI, findingsAPI } from '../utils/api';
+import MapLayerControl, { SwissTileLayer } from '../components/MapLayerControl';
 import L from 'leaflet';
 
 // Custom marker icon
@@ -30,6 +32,7 @@ const createMarkerIcon = (edibility) => {
 
 function SpeciesDetail() {
   const { id } = useParams();
+  const [mapLayer, setMapLayer] = useState('color');
 
   const { data: species, isLoading } = useQuery({
     queryKey: ['species', id],
@@ -248,7 +251,7 @@ function SpeciesDetail() {
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold">Findings Map</h2>
             </div>
-            <div style={{ height: '400px' }}>
+            <div style={{ height: '400px', position: 'relative' }}>
               <MapContainer
                 center={[
                   parseFloat(findingsData.findings[0].latitude),
@@ -257,10 +260,8 @@ function SpeciesDetail() {
                 zoom={10}
                 style={{ height: '100%', width: '100%' }}
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+                <SwissTileLayer layer={mapLayer} />
+                <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
                 {findingsData.findings.map((finding) => (
                   <Marker
                     key={finding.id}
