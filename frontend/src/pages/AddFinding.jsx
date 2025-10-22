@@ -207,8 +207,8 @@ function AddFinding() {
           <div>
             <label className="label">Species *</label>
             {selectedSpecies ? (
-              <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg">
-                <p className="font-semibold italic">{selectedSpecies.scientificName}</p>
+              <div className="p-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg">
+                <p className="font-semibold italic text-gray-900 dark:text-gray-100">{selectedSpecies.scientificName}</p>
                 {selectedSpecies.commonName && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">{selectedSpecies.commonName}</p>
                 )}
@@ -230,7 +230,7 @@ function AddFinding() {
                   className="input mb-2"
                 />
                 {speciesData?.species && speciesData.species.length > 0 && (
-                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg divide-y max-h-48 overflow-y-auto">
+                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg divide-y divide-gray-200 dark:divide-gray-700 max-h-48 overflow-y-auto">
                     {speciesData.species.map((species) => (
                       <button
                         key={species.id}
@@ -239,9 +239,9 @@ function AddFinding() {
                           setValue('speciesId', species.id);
                           setSearchTerm('');
                         }}
-                        className="w-full px-3 py-2 text-left hover:bg-gray-50"
+                        className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700"
                       >
-                        <p className="font-medium italic">{species.scientificName}</p>
+                        <p className="font-medium italic text-gray-900 dark:text-gray-100">{species.scientificName}</p>
                         {species.commonName && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">{species.commonName}</p>
                         )}
@@ -324,8 +324,8 @@ function AddFinding() {
 
             {/* Interactive Map */}
             {showMap && (
-              <div className="mt-3 border border-gray-300 rounded-lg overflow-hidden">
-                <div className="bg-primary-50 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-300">
+              <div className="mt-3 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                <div className="bg-primary-50 dark:bg-primary-900/20 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">
                   Click on the map to set the location
                 </div>
                 <div style={{ height: '400px' }}>
