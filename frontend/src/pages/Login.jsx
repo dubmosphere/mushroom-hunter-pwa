@@ -31,13 +31,13 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-800 mb-2">
+          <h1 className="text-4xl font-bold text-primary-800 dark:text-primary-400 mb-2">
             Mushroom Hunter
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-300">
             Track and explore mushrooms in Switzerland
           </p>
         </div>
@@ -46,7 +46,7 @@ function Login() {
           <h2 className="text-2xl font-bold mb-6">Login</h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-800 dark:border-red-800 text-red-700 dark:text-red-400 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
               {error}
             </div>
           )}
@@ -91,9 +91,9 @@ function Login() {
             </button>
           </form>
 
-          <p className="mt-4 text-center text-gray-600">
+          <p className="mt-4 text-center text-gray-600 dark:text-gray-400">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
+            <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
               Register here
             </Link>
           </p>

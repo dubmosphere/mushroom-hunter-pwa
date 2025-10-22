@@ -69,7 +69,7 @@ function FindingsMap() {
     return (
       <div className="text-center py-12">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-        <p className="mt-4 text-gray-600">Loading map...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading map...</p>
       </div>
     );
   }
@@ -77,8 +77,8 @@ function FindingsMap() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Findings Map</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2 dark:text-gray-100">Findings Map</h1>
+        <p className="text-gray-600 dark:text-gray-400">
           View all your mushroom findings on the map
         </p>
       </div>
@@ -143,26 +143,26 @@ function FindingsMap() {
                   <div className="p-2">
                     <Link
                       to={`/species/${finding.species.id}`}
-                      className="font-semibold text-primary-700 hover:text-primary-800 italic block mb-1"
+                      className="font-semibold text-primary-700 dark:text-primary-400 hover:text-primary-800 italic block mb-1"
                     >
                       {finding.species.scientificName}
                     </Link>
                     {finding.species.commonName && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         {finding.species.commonName}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {format(new Date(finding.foundAt), 'PPP')}
                     </p>
                     {finding.location && (
-                      <p className="text-xs text-gray-500 mt-1">{finding.location}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{finding.location}</p>
                     )}
                     <div className="flex items-center gap-2 mt-2">
                       <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                        finding.species.edibility === 'edible' ? 'bg-green-100 text-green-800' :
-                        finding.species.edibility === 'poisonous' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                        finding.species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+                        finding.species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
+                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
                       }`}>
                         {finding.species.edibility}
                       </span>
@@ -185,7 +185,7 @@ function FindingsMap() {
 
       {findings && findings.length === 0 && (
         <div className="card text-center py-8 mt-4">
-          <p className="text-gray-600 mb-4">No findings to display on the map yet.</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">No findings to display on the map yet.</p>
           <Link to="/findings/new" className="btn-primary inline-block">
             Add Your First Finding
           </Link>

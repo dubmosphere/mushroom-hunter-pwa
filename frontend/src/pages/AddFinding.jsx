@@ -188,7 +188,7 @@ function AddFinding() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Link to="/findings" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6">
+      <Link to="/findings" className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6">
         <ArrowLeft size={20} />
         Back to My Findings
       </Link>
@@ -197,7 +197,7 @@ function AddFinding() {
         <h1 className="text-2xl font-bold mb-6">Record a New Finding</h1>
 
         {createMutation.isError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
             Failed to create finding. Please try again.
           </div>
         )}
@@ -210,12 +210,12 @@ function AddFinding() {
               <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg">
                 <p className="font-semibold italic">{selectedSpecies.scientificName}</p>
                 {selectedSpecies.commonName && (
-                  <p className="text-sm text-gray-600">{selectedSpecies.commonName}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedSpecies.commonName}</p>
                 )}
                 <button
                   type="button"
                   onClick={() => setValue('speciesId', '')}
-                  className="text-sm text-primary-600 hover:text-primary-700 mt-2"
+                  className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mt-2"
                 >
                   Change species
                 </button>
@@ -230,7 +230,7 @@ function AddFinding() {
                   className="input mb-2"
                 />
                 {speciesData?.species && speciesData.species.length > 0 && (
-                  <div className="border border-gray-300 rounded-lg divide-y max-h-48 overflow-y-auto">
+                  <div className="border border-gray-300 dark:border-gray-600 rounded-lg divide-y max-h-48 overflow-y-auto">
                     {speciesData.species.map((species) => (
                       <button
                         key={species.id}
@@ -243,7 +243,7 @@ function AddFinding() {
                       >
                         <p className="font-medium italic">{species.scientificName}</p>
                         {species.commonName && (
-                          <p className="text-sm text-gray-600">{species.commonName}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{species.commonName}</p>
                         )}
                       </button>
                     ))}
@@ -325,7 +325,7 @@ function AddFinding() {
             {/* Interactive Map */}
             {showMap && (
               <div className="mt-3 border border-gray-300 rounded-lg overflow-hidden">
-                <div className="bg-primary-50 px-3 py-2 text-sm text-gray-700 border-b border-gray-300">
+                <div className="bg-primary-50 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-300">
                   Click on the map to set the location
                 </div>
                 <div style={{ height: '400px' }}>
@@ -384,7 +384,7 @@ function AddFinding() {
                 Get Location
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Auto-filled when using current location, or click "Get Location" button
             </p>
           </div>

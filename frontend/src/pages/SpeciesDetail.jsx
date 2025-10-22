@@ -59,7 +59,7 @@ function SpeciesDetail() {
   if (!species) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Species not found</p>
+        <p className="text-gray-600 dark:text-gray-400">Species not found</p>
       </div>
     );
   }
@@ -71,7 +71,7 @@ function SpeciesDetail() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Link to="/species" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 mb-6">
+      <Link to="/species" className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6">
         <ArrowLeft size={20} />
         Back to Species Explorer
       </Link>
@@ -81,13 +81,13 @@ function SpeciesDetail() {
           <div>
             <h1 className="text-3xl font-bold italic mb-2">{species.scientificName}</h1>
             {species.commonName && (
-              <p className="text-xl text-gray-600">{species.commonName}</p>
+              <p className="text-xl text-gray-600 dark:text-gray-400">{species.commonName}</p>
             )}
           </div>
           <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            species.edibility === 'edible' ? 'bg-green-100 text-green-800' :
-            species.edibility === 'poisonous' ? 'bg-red-100 text-red-800' :
-            'bg-gray-100 text-gray-800'
+            species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+            species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
+            'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
           }`}>
             {species.edibility?.toUpperCase()}
           </span>
@@ -95,7 +95,7 @@ function SpeciesDetail() {
 
         {/* Multi-language common names */}
         {(species.commonNameDE || species.commonNameFR || species.commonNameIT) && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
             <h3 className="font-semibold mb-2">Common Names</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
               {species.commonNameDE && <p><strong>DE:</strong> {species.commonNameDE}</p>}
@@ -121,7 +121,7 @@ function SpeciesDetail() {
         {species.description && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">Description</h3>
-            <p className="text-gray-700 whitespace-pre-line">{species.description}</p>
+            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{species.description}</p>
           </div>
         )}
 
@@ -130,25 +130,25 @@ function SpeciesDetail() {
           {species.capShape && (
             <div>
               <h4 className="font-semibold mb-1">Cap Shape</h4>
-              <p className="text-gray-700">{species.capShape}</p>
+              <p className="text-gray-700 dark:text-gray-300">{species.capShape}</p>
             </div>
           )}
           {species.capColor && (
             <div>
               <h4 className="font-semibold mb-1">Cap Color</h4>
-              <p className="text-gray-700">{species.capColor}</p>
+              <p className="text-gray-700 dark:text-gray-300">{species.capColor}</p>
             </div>
           )}
           {species.gillAttachment && (
             <div>
               <h4 className="font-semibold mb-1">Gill Attachment</h4>
-              <p className="text-gray-700">{species.gillAttachment}</p>
+              <p className="text-gray-700 dark:text-gray-300">{species.gillAttachment}</p>
             </div>
           )}
           {species.sporePrintColor && (
             <div>
               <h4 className="font-semibold mb-1">Spore Print Color</h4>
-              <p className="text-gray-700">{species.sporePrintColor}</p>
+              <p className="text-gray-700 dark:text-gray-300">{species.sporePrintColor}</p>
             </div>
           )}
         </div>
@@ -158,11 +158,11 @@ function SpeciesDetail() {
           {species.habitat && (
             <>
               <h3 className="text-lg font-semibold mb-3">Habitat</h3>
-              <p className="text-gray-700 mb-4">{species.habitat}</p>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">{species.habitat}</p>
             </>
           )}
           {species.occurrence && (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               <strong>Occurrence:</strong> {species.occurrence.replace('_', ' ').charAt(0).toUpperCase() + species.occurrence.replace('_', ' ').slice(1)}
             </p>
           )}
@@ -172,7 +172,7 @@ function SpeciesDetail() {
         {(species.seasonStart || species.seasonEnd) && (
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3">Season</h3>
-            <p className="text-gray-700">
+            <p className="text-gray-700 dark:text-gray-300">
               {months[species.seasonStart - 1]} - {months[species.seasonEnd - 1]}
             </p>
           </div>
@@ -180,9 +180,9 @@ function SpeciesDetail() {
 
         {/* Toxicity Warning */}
         {species.toxicity && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Toxicity Warning</h3>
-            <p className="text-red-700">{species.toxicity}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Toxicity Warning</h3>
+            <p className="text-red-700 dark:text-red-400">{species.toxicity}</p>
           </div>
         )}
 
@@ -205,7 +205,7 @@ function SpeciesDetail() {
             <h2 className="text-2xl font-bold mb-4">My Findings ({findingsData.findings.length})</h2>
             <div className="space-y-3">
               {findingsData.findings.map((finding) => (
-                <div key={finding.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={finding.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -221,12 +221,12 @@ function SpeciesDetail() {
                         </Link>
                       </div>
                       {finding.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-1">
                           <MapPin size={14} />
                           <span>{finding.location}</span>
                         </div>
                       )}
-                      <div className="text-sm text-gray-600 space-y-1">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                         {finding.quantity && <p>Quantity: {finding.quantity}</p>}
                         {finding.weather && <p>Weather: {finding.weather}</p>}
                         {finding.temperature !== null && finding.temperature !== undefined && (
@@ -234,7 +234,7 @@ function SpeciesDetail() {
                         )}
                       </div>
                       {finding.notes && (
-                        <p className="text-sm text-gray-700 mt-2 italic">"{finding.notes}"</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 italic">"{finding.notes}"</p>
                       )}
                     </div>
                   </div>
@@ -245,7 +245,7 @@ function SpeciesDetail() {
 
           {/* Findings Map */}
           <div className="card mt-6 p-0 overflow-hidden">
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold">Findings Map</h2>
             </div>
             <div style={{ height: '400px' }}>
@@ -271,7 +271,7 @@ function SpeciesDetail() {
                       <div className="text-sm">
                         <p className="font-bold">{format(new Date(finding.foundAt), 'PPP')}</p>
                         {finding.location && (
-                          <p className="text-gray-600 mt-1">{finding.location}</p>
+                          <p className="text-gray-600 dark:text-gray-400 mt-1">{finding.location}</p>
                         )}
                         <Link
                           to={`/findings/${finding.id}`}

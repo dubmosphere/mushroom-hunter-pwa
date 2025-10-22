@@ -33,7 +33,7 @@ function MyFindings() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">My Findings</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">My Findings</h1>
         <Link to="/findings/new" className="btn-primary flex items-center gap-2">
           <Plus size={20} />
           Add Finding
@@ -43,11 +43,11 @@ function MyFindings() {
       {isLoading ? (
         <div className="text-center py-12">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600">Loading findings...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading findings...</p>
         </div>
       ) : findingsData?.findings?.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-600 mb-4">You haven't recorded any findings yet.</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">You haven't recorded any findings yet.</p>
           <Link to="/findings/new" className="btn-primary inline-flex items-center gap-2">
             <Plus size={20} />
             Record Your First Finding
@@ -63,7 +63,7 @@ function MyFindings() {
                     <div className="flex items-center gap-3 mb-2">
                       <Link
                         to={`/species/${finding.species.id}`}
-                        className="text-xl font-semibold text-primary-700 hover:text-primary-800 italic"
+                        className="text-xl font-semibold text-primary-700 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 italic"
                       >
                         {finding.species.scientificName}
                       </Link>
@@ -77,10 +77,10 @@ function MyFindings() {
                       </Link>
                     </div>
                     {finding.species.commonName && (
-                      <p className="text-gray-600">{finding.species.commonName}</p>
+                      <p className="text-gray-600 dark:text-gray-400">{finding.species.commonName}</p>
                     )}
 
-                    <div className="mt-3 space-y-2 text-sm text-gray-600">
+                    <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-2">
                         <Calendar size={16} />
                         <span>{format(new Date(finding.foundAt), 'PPP')}</span>
@@ -103,7 +103,7 @@ function MyFindings() {
                     </div>
 
                     {finding.notes && (
-                      <p className="mt-3 text-gray-700 whitespace-pre-line">{finding.notes}</p>
+                      <p className="mt-3 text-gray-700 dark:text-gray-300 whitespace-pre-line">{finding.notes}</p>
                     )}
                   </div>
 
@@ -129,7 +129,7 @@ function MyFindings() {
               >
                 Previous
               </button>
-              <span className="px-4 py-2 text-gray-700">
+              <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
                 Page {page} of {findingsData.pagination.totalPages}
               </span>
               <button

@@ -59,7 +59,7 @@ function FindingDetail() {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-        <p className="mt-4 text-gray-600">Loading finding...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading finding...</p>
       </div>
     );
   }
@@ -67,8 +67,8 @@ function FindingDetail() {
   if (error || !finding) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="card bg-red-50 border-red-200">
-          <p className="text-red-700">Failed to load finding. It may not exist or you don't have permission to view it.</p>
+        <div className="card bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+          <p className="text-red-700 dark:text-red-400">Failed to load finding. It may not exist or you don't have permission to view it.</p>
           <Link to="/findings" className="btn-primary mt-4 inline-block">
             Back to My Findings
           </Link>
@@ -78,19 +78,19 @@ function FindingDetail() {
   }
 
   const edibilityColors = {
-    edible: 'bg-green-100 text-green-800',
-    poisonous: 'bg-red-100 text-red-800',
-    inedible: 'bg-gray-100 text-gray-800',
-    medicinal: 'bg-blue-100 text-blue-800',
-    psychoactive: 'bg-purple-100 text-purple-800',
-    unknown: 'bg-yellow-100 text-yellow-800',
+    edible: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    poisonous: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+    inedible: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+    medicinal: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+    psychoactive: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
+    unknown: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <Link to="/findings" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700">
+        <Link to="/findings" className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
           <ArrowLeft size={20} />
           Back to My Findings
         </Link>
@@ -114,12 +114,12 @@ function FindingDetail() {
             <div>
               <Link
                 to={`/species/${finding.species.id}`}
-                className="text-2xl font-bold text-primary-700 hover:text-primary-800 italic"
+                className="text-2xl font-bold text-primary-700 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 italic"
               >
                 {finding.species.scientificName}
               </Link>
               {finding.species.commonName && (
-                <p className="text-lg text-gray-600 mt-1">{finding.species.commonName}</p>
+                <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">{finding.species.commonName}</p>
               )}
             </div>
             {finding.species.edibility && (
@@ -131,7 +131,7 @@ function FindingDetail() {
 
           {/* Taxonomy */}
           {finding.species.genus && (
-            <div className="text-sm text-gray-600 mb-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               <p>
                 <span className="font-medium">Taxonomy:</span>{' '}
                 {finding.species.genus.family?.order?.class?.division?.name} → {' '}
@@ -153,7 +153,7 @@ function FindingDetail() {
             <div className="flex items-start gap-3">
               <Calendar size={20} className="text-gray-400 mt-1 flex-shrink-0" />
               <div>
-                <p className="text-sm text-gray-500">Date & Time</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Date & Time</p>
                 <p className="font-medium">{format(new Date(finding.foundAt), 'PPPp')}</p>
               </div>
             </div>
@@ -163,7 +163,7 @@ function FindingDetail() {
               <div className="flex items-start gap-3">
                 <MapPin size={20} className="text-gray-400 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-gray-500">Location</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Location</p>
                   <p className="font-medium">{finding.location}</p>
                 </div>
               </div>
@@ -173,7 +173,7 @@ function FindingDetail() {
             <div className="flex items-start gap-3">
               <MapPin size={20} className="text-gray-400 mt-1 flex-shrink-0" />
               <div>
-                <p className="text-sm text-gray-500">Coordinates</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Coordinates</p>
                 <p className="font-medium font-mono text-sm">
                   {parseFloat(finding.latitude).toFixed(6)}, {parseFloat(finding.longitude).toFixed(6)}
                 </p>
@@ -185,7 +185,7 @@ function FindingDetail() {
               <div className="flex items-start gap-3">
                 <div className="w-5 h-5 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-gray-500">Quantity</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
                   <p className="font-medium">{finding.quantity}</p>
                 </div>
               </div>
@@ -196,7 +196,7 @@ function FindingDetail() {
               <div className="flex items-start gap-3">
                 <Cloud size={20} className="text-gray-400 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-gray-500">Weather</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Weather</p>
                   <p className="font-medium capitalize">{finding.weather}</p>
                 </div>
               </div>
@@ -207,7 +207,7 @@ function FindingDetail() {
               <div className="flex items-start gap-3">
                 <Thermometer size={20} className="text-gray-400 mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-gray-500">Temperature</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Temperature</p>
                   <p className="font-medium">{finding.temperature}°C</p>
                 </div>
               </div>
@@ -216,16 +216,16 @@ function FindingDetail() {
 
           {/* Notes */}
           {finding.notes && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-500 mb-2">Notes</p>
-              <p className="text-gray-700 whitespace-pre-line">{finding.notes}</p>
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Notes</p>
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">{finding.notes}</p>
             </div>
           )}
         </div>
 
         {/* Map Card */}
         <div className="card p-0 overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-bold">Location on Map</h2>
           </div>
           <div style={{ height: '400px' }}>
@@ -246,13 +246,13 @@ function FindingDetail() {
                   <div className="text-sm">
                     <p className="font-bold italic">{finding.species.scientificName}</p>
                     {finding.species.commonName && (
-                      <p className="text-gray-600">{finding.species.commonName}</p>
+                      <p className="text-gray-600 dark:text-gray-400">{finding.species.commonName}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {format(new Date(finding.foundAt), 'PPP')}
                     </p>
                     {finding.location && (
-                      <p className="text-xs text-gray-500">{finding.location}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{finding.location}</p>
                     )}
                   </div>
                 </Popup>
