@@ -18,16 +18,22 @@ A comprehensive Progressive Web App for mushroom hunters in Switzerland. Track y
   - Comprehensive filtering system (edibility, occurrence, season, taxonomy)
   - Search by scientific or common name
   - Multi-language support (German, French, Italian)
-  - Pagination for large datasets
+  - **Infinite scroll** for seamless browsing
+  - Full taxonomy breadcrumb display (Division → Class → Order → Family → Genus)
 - **Findings Management**:
   - Record findings with GPS location (auto-detect or manual entry)
   - **Reverse geocoding**: Automatically fetch location names from coordinates
   - Track date, weather, quantity, and notes
   - View personal finding history
-- **Interactive Map**:
-  - Visualize all findings on a map
+  - Detailed finding pages with complete taxonomy information
+- **Interactive Swiss Map** (OpenLayers):
+  - **Swiss Federal Geoportal** integration (EPSG:2056 projection)
+  - Multiple base layers: Color map, grayscale map, and aerial imagery
   - Color-coded markers by edibility
-  - Click markers for detailed information
+  - Click markers for detailed popups with species information
+  - **Real-time location tracking** with accuracy indicator
+  - Zoom level restrictions per layer (aerial: 19, maps: 20)
+  - Swiss territory bounds enforcement
 - **Dashboard**: Quick stats and recent findings overview
 
 ## Technology Stack
@@ -39,15 +45,17 @@ A comprehensive Progressive Web App for mushroom hunters in Switzerland. Track y
 - **JWT**: Authentication tokens
 - **bcryptjs**: Password hashing
 - **Express Validator**: Input validation
+- **CSV Parser**: Non-destructive species data import
 
 ### Frontend
 - **React 18**: UI framework
 - **Vite**: Fast build tool and dev server
 - **React Router**: Client-side routing
-- **TanStack Query**: Data fetching and caching
+- **TanStack Query**: Data fetching and caching (with infinite query support)
 - **Zustand**: State management
 - **React Hook Form**: Form handling
-- **Leaflet**: Interactive maps
+- **OpenLayers**: Swiss map integration with WMTS tiles
+- **Proj4js**: Coordinate system transformations
 - **Tailwind CSS**: Utility-first styling
 - **Workbox**: Service worker for PWA
 
@@ -270,6 +278,22 @@ The app is configured as a PWA with:
 - Runtime caching for API calls and images
 - Offline-first strategy for static assets
 
+## Data Import
+
+The project includes a non-destructive species import script that allows you to update the species database without losing user findings:
+
+```bash
+cd backend
+npm run import
+```
+
+Features:
+- Updates existing species with new information
+- Adds new species from CSV data
+- Preserves all user findings and relationships
+- Provides detailed import statistics
+- Safe to run multiple times
+
 ## Future Enhancements
 
 - [ ] Image upload for species and findings
@@ -280,7 +304,7 @@ The app is configured as a PWA with:
 - [ ] Weather integration API
 - [ ] Multi-language UI support
 - [ ] Admin dashboard for database management
-- [ ] Species import from external databases
+- [x] ~~Species import from external databases~~ (Implemented)
 
 ## Contributing
 

@@ -56,10 +56,11 @@ Open your browser to: **http://localhost:5173**
 
 ## What to Do First
 
-1. **Explore Species** - Browse the 7 pre-loaded Swiss mushrooms
-2. **Add a Finding** - Record your first mushroom discovery
-3. **View Map** - See your findings on an interactive map
+1. **Explore Species** - Browse the pre-loaded Swiss mushrooms with infinite scroll
+2. **Add a Finding** - Record your first mushroom discovery with GPS location
+3. **View Map** - See your findings on the interactive Swiss Federal map
 4. **Filter & Search** - Try the comprehensive filter system
+5. **Import Data** - Run `npm run import` in backend to load full species database
 
 ## Troubleshooting
 

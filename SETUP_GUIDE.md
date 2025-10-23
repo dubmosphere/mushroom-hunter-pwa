@@ -128,6 +128,25 @@ The seed script creates:
 
 ## Adding More Species
 
+### Option 1: CSV Import (Recommended)
+
+Import species data from a CSV file:
+
+```bash
+cd backend
+npm run import
+```
+
+The import script:
+- **Non-destructive**: Updates existing species and adds new ones
+- **Preserves findings**: Your user findings remain intact
+- **Safe to re-run**: Can be executed multiple times
+- **Provides statistics**: Shows what was inserted vs. updated
+
+Place your CSV file at `/home/dubmosphere/git/aicoding/mushroom-hunter-pwa/idea/import.csv` with the required format.
+
+### Option 2: Admin Panel
+
 As an admin user, you can:
 1. Use the API directly to add species
 2. Create an admin panel (future enhancement)
