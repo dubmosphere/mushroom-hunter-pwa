@@ -30,22 +30,62 @@ const cache = {
   divisions: {},
 };
 
+// Track import statistics
+const stats = {
+  speciesInserted: 0,
+  speciesUpdated: 0,
+  divisionsInserted: 0,
+  classesInserted: 0,
+  ordersInserted: 0,
+  familiesInserted: 0,
+  generaInserted: 0,
+  generaUpdated: 0,
+};
+
 /**
- * Clear all taxonomy and species tables
+ * Load existing taxonomy data into cache
  */
-async function clearTables() {
-  console.log('Clearing tables...');
+async function loadExistingData() {
+  console.log('Loading existing taxonomy data into cache...');
 
   const client = await pool.connect();
   try {
-    await client.query('TRUNCATE TABLE "Species" CASCADE');
-    await client.query('TRUNCATE TABLE "Genera" CASCADE');
-    await client.query('TRUNCATE TABLE "Families" CASCADE');
-    await client.query('TRUNCATE TABLE "Orders" CASCADE');
-    await client.query('TRUNCATE TABLE "Classes" CASCADE');
-    await client.query('TRUNCATE TABLE "Divisions" CASCADE');
+    // Load divisions
+    const divisions = await client.query('SELECT id, name FROM "Divisions"');
+    divisions.rows.forEach(row => {
+      cache.divisions[row.name] = { id: row.id, name: row.name };
+    });
+    console.log(`Loaded ${divisions.rows.length} divisions`);
 
-    console.log('Tables cleared.');
+    // Load classes
+    const classes = await client.query('SELECT id, name FROM "Classes"');
+    classes.rows.forEach(row => {
+      cache.classes[row.name] = { id: row.id, name: row.name };
+    });
+    console.log(`Loaded ${classes.rows.length} classes`);
+
+    // Load orders
+    const orders = await client.query('SELECT id, name FROM "Orders"');
+    orders.rows.forEach(row => {
+      cache.orders[row.name] = { id: row.id, name: row.name };
+    });
+    console.log(`Loaded ${orders.rows.length} orders`);
+
+    // Load families
+    const families = await client.query('SELECT id, name FROM "Families"');
+    families.rows.forEach(row => {
+      cache.families[row.name] = { id: row.id, name: row.name };
+    });
+    console.log(`Loaded ${families.rows.length} families`);
+
+    // Load genera
+    const genera = await client.query('SELECT id, name, "commonName" FROM "Genera"');
+    genera.rows.forEach(row => {
+      cache.genera[row.name] = { id: row.id, name: row.name, commonName: row.commonName };
+    });
+    console.log(`Loaded ${genera.rows.length} genera`);
+
+    console.log('Cache loaded successfully.');
   } finally {
     client.release();
   }
@@ -111,6 +151,7 @@ async function importDivision(client, divisionName) {
   };
 
   cache.divisions[divisionName] = data;
+  stats.divisionsInserted++;
   console.log(`Imported division: ${data.id} (${data.name})`);
 
   return data;
@@ -136,6 +177,7 @@ async function importClass(client, className, divisionId) {
   };
 
   cache.classes[className] = data;
+  stats.classesInserted++;
   console.log(`Imported class: ${data.id} (${data.name})`);
 
   return data;
@@ -161,6 +203,7 @@ async function importOrder(client, orderName, classId) {
   };
 
   cache.orders[orderName] = data;
+  stats.ordersInserted++;
   console.log(`Imported order: ${data.id} (${data.name})`);
 
   return data;
@@ -186,6 +229,7 @@ async function importFamily(client, familyName, orderId) {
   };
 
   cache.families[familyName] = data;
+  stats.familiesInserted++;
   console.log(`Imported family: ${data.id} (${data.name})`);
 
   return data;
@@ -223,6 +267,7 @@ async function importGenus(client, genusName, genusGerman, familyId) {
       commonName: genusGerman,
       familyId: familyId,
     };
+    stats.generaUpdated++;
   } else if (existing.rows.length === 0) {
     // Insert new genus
     const result = await client.query(
@@ -235,6 +280,7 @@ async function importGenus(client, genusName, genusGerman, familyId) {
       commonName: genusGerman,
       familyId: familyId,
     };
+    stats.generaInserted++;
   } else {
     data = existing.rows[0];
   }
@@ -246,25 +292,54 @@ async function importGenus(client, genusName, genusGerman, familyId) {
 }
 
 /**
- * Import species
+ * Import species (insert or update)
  */
 async function importSpecies(client, data) {
-  const result = await client.query(
-    `INSERT INTO "Species" (
-      id, "scientificName", "commonName", "commonNameDE", edibility, "genusId", "createdAt", "updatedAt"
-    ) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id`,
-    [
-      data.scientificName,
-      data.commonName,
-      data.commonName, // German name
-      data.edibility,
-      data.genusId,
-    ]
+  // Check if species already exists
+  const existing = await client.query(
+    'SELECT id FROM "Species" WHERE "scientificName" = $1',
+    [data.scientificName]
   );
 
-  console.log(`Imported species: ${result.rows[0].id} (${data.scientificName})`);
-
-  return result.rows[0].id;
+  if (existing.rows.length > 0) {
+    // Update existing species
+    await client.query(
+      `UPDATE "Species" SET
+        "commonName" = $1,
+        "commonNameDE" = $2,
+        edibility = $3,
+        "genusId" = $4,
+        "updatedAt" = NOW()
+      WHERE "scientificName" = $5`,
+      [
+        data.commonName,
+        data.commonName, // German name
+        data.edibility,
+        data.genusId,
+        data.scientificName,
+      ]
+    );
+    stats.speciesUpdated++;
+    console.log(`Updated species: ${existing.rows[0].id} (${data.scientificName})`);
+    return existing.rows[0].id;
+  } else {
+    // Insert new species
+    const result = await client.query(
+      `INSERT INTO "Species" (
+        id, "scientificName", "commonName", "commonNameDE", edibility, "genusId", "createdAt", "updatedAt"
+      ) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id`,
+      [
+        data.scientificName,
+        data.commonName,
+        data.commonName, // German name
+        data.edibility,
+        data.genusId,
+      ]
+    );
+    stats.speciesInserted++;
+    console.log(`Inserted species: ${result.rows[0].id} (${data.scientificName})`);
+    return result.rows[0].id;
+  }
 }
 
 /**
@@ -372,13 +447,14 @@ async function processRow(client, row) {
  * Main import function
  */
 async function importSpeciesData() {
-  console.log('Starting species import...');
+  console.log('Starting non-destructive species import...');
+  console.log('This will update existing species and add new ones without deleting your findings.');
 
   const client = await pool.connect();
 
   try {
-    // Clear existing data
-    await clearTables();
+    // Load existing data into cache
+    await loadExistingData();
 
     // Read and process CSV file
     const csvFilePath = path.join(__dirname, '../../idea/import.csv');
@@ -414,7 +490,14 @@ async function importSpeciesData() {
       await processRow(client, row);
     }
 
-    console.log('Import completed successfully!');
+    console.log('\n=== Import Summary ===');
+    console.log(`Species: ${stats.speciesInserted} inserted, ${stats.speciesUpdated} updated`);
+    console.log(`Genera: ${stats.generaInserted} inserted, ${stats.generaUpdated} updated`);
+    console.log(`Families: ${stats.familiesInserted} inserted`);
+    console.log(`Orders: ${stats.ordersInserted} inserted`);
+    console.log(`Classes: ${stats.classesInserted} inserted`);
+    console.log(`Divisions: ${stats.divisionsInserted} inserted`);
+    console.log('\nImport completed successfully! Your findings have been preserved.');
   } catch (error) {
     console.error('Import failed:', error);
     throw error;
