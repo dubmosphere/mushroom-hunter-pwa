@@ -25,29 +25,30 @@ register(proj4);
 const projection = getProjection('EPSG:2056');
 projection.setExtent([2420000, 1030000, 2900000, 1350000]);
 
-// Swiss map layers
+// Swiss map layers with their maximum zoom levels
 const SWISS_LAYERS = {
   color: {
     name: 'Color Map',
     layer: 'ch.swisstopo.pixelkarte-farbe',
+    maxZoom: 27,
   },
   grey: {
     name: 'Grey Map',
     layer: 'ch.swisstopo.pixelkarte-grau',
+    maxZoom: 27,
   },
   aerial: {
     name: 'Aerial Imagery',
     layer: 'ch.swisstopo.swissimage',
+    maxZoom: 28,
   },
 };
 
-// WMTS resolutions and matrix IDs for Swiss projection
+// WMTS resolutions for Swiss projection (EPSG:2056)
 const resolutions = [
   4000, 3750, 3500, 3250, 3000, 2750, 2500, 2250, 2000, 1750, 1500, 1250,
   1000, 750, 650, 500, 250, 100, 50, 20, 10, 5, 2.5, 2, 1.5, 1, 0.5
 ];
-
-const matrixIds = resolutions.map((_, i) => i.toString());
 
 /**
  * Swiss Map Component using OpenLayers
@@ -70,7 +71,10 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
     if (!mapRef.current) return;
 
     // Create WMTS source
-    const createWMTSSource = (layerName) => {
+    const createWMTSSource = (layerName, maxZoom) => {
+      const layerResolutions = resolutions.slice(0, maxZoom + 1);
+      const layerMatrixIds = layerResolutions.map((_, i) => i.toString());
+
       return new WMTS({
         url: 'https://wmts.geo.admin.ch/1.0.0/' + layerName + '/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg',
         layer: layerName,
@@ -79,8 +83,9 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
         projection: projection,
         tileGrid: new WMTSTileGrid({
           origin: [2420000, 1350000],
-          resolutions: resolutions,
-          matrixIds: matrixIds,
+          resolutions: layerResolutions,
+          matrixIds: layerMatrixIds,
+          extent: [2420000, 1030000, 2900000, 1350000], // Swiss bounds
         }),
         style: 'default',
         requestEncoding: 'REST',
@@ -89,7 +94,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
 
     // Create tile layer
     const tileLayer = new TileLayer({
-      source: createWMTSSource(SWISS_LAYERS[currentLayer].layer),
+      source: createWMTSSource(SWISS_LAYERS[currentLayer].layer, SWISS_LAYERS[currentLayer].maxZoom),
     });
 
     // Create vector source for markers
@@ -127,7 +132,8 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
         center: center,
         zoom: zoom,
         minZoom: 0,
-        maxZoom: 26,
+        maxZoom: SWISS_LAYERS[currentLayer].maxZoom,
+        extent: [2420000, 1030000, 2900000, 1350000], // Restrict view to Swiss bounds
       }),
     });
 
@@ -249,7 +255,10 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
     const layers = map.getLayers();
     const tileLayer = layers.item(0);
 
-    const createWMTSSource = (layerName) => {
+    const createWMTSSource = (layerName, maxZoom) => {
+      const layerResolutions = resolutions.slice(0, maxZoom + 1);
+      const layerMatrixIds = layerResolutions.map((_, i) => i.toString());
+
       return new WMTS({
         url: 'https://wmts.geo.admin.ch/1.0.0/' + layerName + '/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg',
         layer: layerName,
@@ -258,15 +267,20 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
         projection: projection,
         tileGrid: new WMTSTileGrid({
           origin: [2420000, 1350000],
-          resolutions: resolutions,
-          matrixIds: matrixIds,
+          resolutions: layerResolutions,
+          matrixIds: layerMatrixIds,
+          extent: [2420000, 1030000, 2900000, 1350000], // Swiss bounds
         }),
         style: 'default',
         requestEncoding: 'REST',
       });
     };
 
-    tileLayer.setSource(createWMTSSource(SWISS_LAYERS[currentLayer].layer));
+    tileLayer.setSource(createWMTSSource(SWISS_LAYERS[currentLayer].layer, SWISS_LAYERS[currentLayer].maxZoom));
+
+    // Update view's maxZoom when layer changes
+    const view = map.getView();
+    view.setMaxZoom(SWISS_LAYERS[currentLayer].maxZoom);
   }, [currentLayer]);
 
   const handleLayerChange = (layerKey) => {
