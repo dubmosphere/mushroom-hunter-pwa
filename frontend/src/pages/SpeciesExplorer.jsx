@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useRef } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Search, Filter, X } from 'lucide-react';
 import { speciesAPI, taxonomyAPI } from '../utils/api';
@@ -16,19 +16,32 @@ function SpeciesExplorer() {
     genusId: '',
     season: '',
   });
-  const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const loadMoreRef = useRef(null);
 
-  const { data: speciesData, isLoading } = useQuery({
-    queryKey: ['species', filters, page],
-    queryFn: async () => {
-      const params = { ...filters, page, limit: 20 };
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ['species', filters],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { ...filters, page: pageParam, limit: 20 };
       Object.keys(params).forEach(key => {
         if (!params[key]) delete params[key];
       });
       const response = await speciesAPI.getAll(params);
       return response.data;
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
   });
 
   const { data: divisions } = useQuery({
@@ -47,9 +60,31 @@ function SpeciesExplorer() {
     },
   });
 
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setPage(1);
   };
 
   const clearFilters = () => {
@@ -64,8 +99,11 @@ function SpeciesExplorer() {
       genusId: '',
       season: '',
     });
-    setPage(1);
   };
+
+  // Flatten all pages into a single array
+  const allSpecies = data?.pages.flatMap(page => page.species) || [];
+  const totalSpecies = data?.pages[0]?.pagination?.total || 0;
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -207,11 +245,11 @@ function SpeciesExplorer() {
       ) : (
         <>
           <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Showing {speciesData?.species?.length || 0} of {speciesData?.pagination?.total || 0} species
+            Showing {allSpecies.length} of {totalSpecies} species
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {speciesData?.species?.map((species) => (
+            {allSpecies.map((species) => (
               <Link
                 key={species.id}
                 to={`/species/${species.id}`}
@@ -241,28 +279,20 @@ function SpeciesExplorer() {
             ))}
           </div>
 
-          {/* Pagination */}
-          {speciesData?.pagination && speciesData.pagination.totalPages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="btn-secondary disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
-                Page {page} of {speciesData.pagination.totalPages}
-              </span>
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page >= speciesData.pagination.totalPages}
-                className="btn-secondary disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          {/* Infinite scroll trigger */}
+          <div ref={loadMoreRef} className="mt-6 py-4 text-center">
+            {isFetchingNextPage && (
+              <div className="flex flex-col items-center gap-2">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"></div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Loading more species...</p>
+              </div>
+            )}
+            {!hasNextPage && allSpecies.length > 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No more species to load
+              </p>
+            )}
+          </div>
         </>
       )}
     </div>
