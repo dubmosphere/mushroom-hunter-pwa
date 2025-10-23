@@ -532,6 +532,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
         <div className="flex flex-col gap-2">
           {/* Layer Control */}
           <button
+            type="button"
             onClick={() => setShowLayerPanel(!showLayerPanel)}
             className="map-control-button layer-switch-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border border-gray-300 dark:border-gray-600 transition-colors"
             title="Change map layer"
@@ -542,6 +543,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
           {/* Location Control */}
           {showLocationControl && (
             <button
+              type="button"
               onClick={isTrackingLocation ? centerOnLocation : toggleLocationTracking}
               className={`map-control-button location-tracking-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border transition-colors ${
                 isTrackingLocation
@@ -562,6 +564,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
               {Object.entries(SWISS_LAYERS).map(([key, layer]) => (
                 <button
                   key={key}
+                  type="button"
                   onClick={() => handleLayerChange(key)}
                   className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                     currentLayer === key

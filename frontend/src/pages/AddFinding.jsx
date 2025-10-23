@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, MapPin, Map as MapIcon } from 'lucide-react';
 import { findingsAPI, speciesAPI } from '../utils/api';
@@ -10,6 +10,7 @@ import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
 function AddFinding() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [gettingLocation, setGettingLocation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMap, setShowMap] = useState(false);
@@ -61,7 +62,11 @@ function AddFinding() {
   const createMutation = useMutation({
     mutationFn: (data) => findingsAPI.create(data),
     onSuccess: () => {
-      navigate('/findings');
+      // Invalidate and refetch findings queries
+      queryClient.invalidateQueries({ queryKey: ['findings'] });
+      navigate('/findings', { replace: true });
+      // Scroll to top after navigation
+      setTimeout(() => window.scrollTo(0, 0), 0);
     },
   });
 
