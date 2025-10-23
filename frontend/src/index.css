@@ -66,4 +66,9 @@
     border-top: 10px solid;
     @apply border-t-gray-300 dark:border-t-gray-600;
   }
+
+  .map-control-button {
+    flex-grow: 0;
+    align-self: flex-end;
+  }
 }

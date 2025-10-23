@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -13,7 +14,7 @@ import { get as getProjection } from 'ol/proj';
 import { register } from 'ol/proj/proj4';
 import Overlay from 'ol/Overlay';
 import proj4 from 'proj4';
-import { Layers, X, Eye, MapPin } from 'lucide-react';
+import { Layers, X, Eye, MapPin, Calendar } from 'lucide-react';
 import { wgs84ToLV95 } from '../utils/projections';
 import 'ol/ol.css';
 
@@ -453,16 +454,12 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
                 <div className="flex items-start justify-between p-3 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex-1">
                     {popupContent.species?.id ? (
-                      <a
-                        href={`/species/${popupContent.species.id}`}
+                      <Link
+                        to={`/species/${popupContent.species.id}`}
                         className="font-bold text-sm italic text-primary-700 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.location.href = `/species/${popupContent.species.id}`;
-                        }}
                       >
                         {popupContent.species.scientificName}
-                      </a>
+                      </Link>
                     ) : (
                       <h3 className="font-bold text-sm italic text-gray-900 dark:text-gray-100">
                         {popupContent.species?.scientificName || 'Unknown Species'}
@@ -483,15 +480,16 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
                 </div>
                 <div className="p-3 space-y-2 text-xs">
                   {popupContent.location && (
-                    <p className="text-gray-700 dark:text-gray-300">
-                      <span className="font-medium">Location:</span> {popupContent.location}
-                    </p>
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                      <MapPin size={14} className="text-gray-400 flex-shrink-0" />
+                      <span>{popupContent.location}</span>
+                    </div>
                   )}
                   {popupContent.foundAt && (
-                    <p className="text-gray-700 dark:text-gray-300">
-                      <span className="font-medium">Date:</span>{' '}
-                      {new Date(popupContent.foundAt).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                      <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                      <span>{new Date(popupContent.foundAt).toLocaleDateString()}</span>
+                    </div>
                   )}
                   {popupContent.quantity && (
                     <p className="text-gray-700 dark:text-gray-300">
@@ -514,17 +512,13 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
                 </div>
                 {popupContent.id && (
                   <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-                    <a
-                      href={`/findings/${popupContent.id}`}
+                    <Link
+                      to={`/findings/${popupContent.id}`}
                       className="btn-secondary text-xs flex items-center gap-1 justify-center w-full"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.location.href = `/findings/${popupContent.id}`;
-                      }}
                     >
                       <Eye size={14} />
                       View Details
-                    </a>
+                    </Link>
                   </div>
                 )}
               </>
@@ -539,7 +533,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
           {/* Layer Control */}
           <button
             onClick={() => setShowLayerPanel(!showLayerPanel)}
-            className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border border-gray-300 dark:border-gray-600 transition-colors"
+            className="map-control-button layer-switch-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border border-gray-300 dark:border-gray-600 transition-colors"
             title="Change map layer"
           >
             <Layers size={20} className="text-gray-700 dark:text-gray-300" />
@@ -549,7 +543,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
           {showLocationControl && (
             <button
               onClick={isTrackingLocation ? centerOnLocation : toggleLocationTracking}
-              className={`bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border transition-colors ${
+              className={`map-control-button location-tracking-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border transition-colors ${
                 isTrackingLocation
                   ? 'border-primary-500 dark:border-primary-600'
                   : 'border-gray-300 dark:border-gray-600'
