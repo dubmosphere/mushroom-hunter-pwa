@@ -316,7 +316,7 @@ async function processRow(client, row) {
     name === '-' ||
     isValidName.includes('(') ||
     isValidName === '' ||
-    !['r', 'k'].includes(isValidName.toLowerCase())
+    !['r'].includes(isValidName.toLowerCase())
   ) {
     return;
   }
@@ -332,6 +332,7 @@ async function processRow(client, row) {
   // Map edibility to our schema
   const edibilityMap = {
     'essbar': 'edible',
+    'speisepilz': 'edible',
     'giftig': 'poisonous',
     'ungeniessbar': 'inedible',
     'ungeniessbar/schwach giftig': 'inedible',
