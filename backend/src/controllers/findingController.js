@@ -1,4 +1,4 @@
-import { Finding, Species, User, Genus } from '../models/index.js';
+import { Finding, Species, User, Genus, Family, Order, Class, Division } from '../models/index.js';
 import { Op } from 'sequelize';
 
 export const getAllFindings = async (req, res) => {
@@ -69,7 +69,26 @@ export const getFindingById = async (req, res) => {
         {
           model: Species,
           as: 'species',
-          include: [{ model: Genus, as: 'genus' }]
+          include: [{
+            model: Genus,
+            as: 'genus',
+            include: [{
+              model: Family,
+              as: 'family',
+              include: [{
+                model: Order,
+                as: 'order',
+                include: [{
+                  model: Class,
+                  as: 'class',
+                  include: [{
+                    model: Division,
+                    as: 'division'
+                  }]
+                }]
+              }]
+            }]
+          }]
         },
         {
           model: User,
