@@ -372,7 +372,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
         {
           enableHighAccuracy: true,
           maximumAge: 10000,
-          timeout: 5000,
+          timeout: 10000,
         }
       );
     }
