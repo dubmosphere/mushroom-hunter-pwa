@@ -210,6 +210,15 @@ function FindingDetail() {
             <SwissMap
               center={wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude))}
               zoom={12}
+              markers={[{
+                coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
+                color: finding.species.edibility === 'edible' ? '#10b981' :
+                       finding.species.edibility === 'poisonous' ? '#ef4444' :
+                       finding.species.edibility === 'medicinal' ? '#3b82f6' :
+                       finding.species.edibility === 'psychoactive' ? '#a855f7' :
+                       '#6b7280',
+                data: finding,
+              }]}
               style={{ height: '100%', width: '100%' }}
             />
           </div>

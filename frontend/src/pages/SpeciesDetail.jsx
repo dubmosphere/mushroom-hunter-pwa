@@ -1,38 +1,13 @@
-import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { MapContainer, Marker, Popup } from 'react-leaflet';
 import { ArrowLeft, MapPin, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { speciesAPI, findingsAPI } from '../utils/api';
-import MapLayerControl, { SwissTileLayer } from '../components/MapLayerControl';
-import L from 'leaflet';
-
-// Custom marker icon
-const createMarkerIcon = (edibility) => {
-  const colors = {
-    edible: '#10b981',
-    poisonous: '#ef4444',
-    inedible: '#6b7280',
-    medicinal: '#3b82f6',
-    psychoactive: '#8b5cf6',
-    unknown: '#f59e0b',
-  };
-
-  const color = colors[edibility] || colors.unknown;
-
-  return L.divIcon({
-    className: 'custom-marker',
-    html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30],
-  });
-};
+import SwissMap from '../components/SwissMap';
+import { wgs84ToLV95 } from '../utils/projections';
 
 function SpeciesDetail() {
   const { id } = useParams();
-  const [mapLayer, setMapLayer] = useState('color');
 
   const { data: species, isLoading } = useQuery({
     queryKey: ['species', id],
@@ -252,41 +227,23 @@ function SpeciesDetail() {
               <h2 className="text-2xl font-bold">Findings Map</h2>
             </div>
             <div style={{ height: '400px', position: 'relative' }}>
-              <MapContainer
-                center={[
+              <SwissMap
+                center={wgs84ToLV95(
                   parseFloat(findingsData.findings[0].latitude),
                   parseFloat(findingsData.findings[0].longitude)
-                ]}
-                zoom={10}
+                )}
+                zoom={8}
+                markers={findingsData.findings.map((finding) => ({
+                  coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
+                  color: species.edibility === 'edible' ? '#10b981' :
+                         species.edibility === 'poisonous' ? '#ef4444' :
+                         species.edibility === 'medicinal' ? '#3b82f6' :
+                         species.edibility === 'psychoactive' ? '#a855f7' :
+                         '#6b7280',
+                  data: finding,
+                }))}
                 style={{ height: '100%', width: '100%' }}
-              >
-                <SwissTileLayer layer={mapLayer} />
-                <MapLayerControl onLayerChange={setMapLayer} defaultLayer="color" />
-                {findingsData.findings.map((finding) => (
-                  <Marker
-                    key={finding.id}
-                    position={[parseFloat(finding.latitude), parseFloat(finding.longitude)]}
-                    icon={createMarkerIcon(species.edibility)}
-                  >
-                    <Popup>
-                      <div className="text-sm">
-                        <p className="font-bold">{format(new Date(finding.foundAt), 'PPP')}</p>
-                        {finding.location && (
-                          <p className="text-gray-600 dark:text-gray-400 mt-1">{finding.location}</p>
-                        )}
-                        <Link
-                          to={`/findings/${finding.id}`}
-                          className="btn-secondary text-xs flex items-center gap-1 px-2 py-1"
-                          title="View details"
-                        >
-                          <Eye size={14} />
-                          Details
-                        </Link>
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
+              />
             </div>
           </div>
         </>

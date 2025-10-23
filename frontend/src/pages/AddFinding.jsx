@@ -328,6 +328,14 @@ function AddFinding() {
                     center={mapPosition}
                     zoom={8}
                     onMapClick={handleMapLocationSelect}
+                    markers={watch('latitude') && watch('longitude') ? [{
+                      coordinates: mapPosition,
+                      color: selectedSpecies?.edibility === 'edible' ? '#10b981' :
+                             selectedSpecies?.edibility === 'poisonous' ? '#ef4444' :
+                             selectedSpecies?.edibility === 'medicinal' ? '#3b82f6' :
+                             selectedSpecies?.edibility === 'psychoactive' ? '#a855f7' :
+                             '#3b82f6',
+                    }] : []}
                     style={{ height: '100%', width: '100%' }}
                   />
                 </div>
