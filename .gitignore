@@ -33,6 +33,8 @@ build/
 
 # Testing
 coverage/
+idea/
+test/
 *.lcov
 
 # Temporary files
