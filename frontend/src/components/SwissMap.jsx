@@ -99,6 +99,9 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
       source: createWMTSSource(SWISS_LAYERS[currentLayer].layer, SWISS_LAYERS[currentLayer].maxZoom),
     });
 
+    // Add attribution to the source
+    tileLayer.getSource().setAttributions('© <a href="https://www.swisstopo.admin.ch/" target="_blank">swisstopo</a>');
+
     // Create vector source for markers
     const vectorSource = new VectorSource();
 
@@ -518,7 +521,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
                     <X size={16} />
                   </button>
                 </div>
-                <div className="p-3 space-y-2 text-xs">
+                <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2 text-xs">
                   <p className="text-gray-700 dark:text-gray-300">
                     <span className="font-medium">Latitude:</span> {popupContent.latitude.toFixed(6)}
                   </p>
@@ -530,6 +533,22 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
                       <span className="font-medium">Accuracy:</span> ±{Math.round(popupContent.accuracy)}m
                     </p>
                   )}
+                </div>
+                <div className="p-3">
+                  <button
+                    onClick={() => {
+                      if (onEmptyMapClick) {
+                        onEmptyMapClick(popupContent.coordinates, {
+                          latitude: popupContent.latitude,
+                          longitude: popupContent.longitude,
+                        });
+                      }
+                    }}
+                    className="btn-primary text-xs flex items-center gap-2 justify-center w-full"
+                  >
+                    <Plus size={14} />
+                    Add Finding at This Location
+                  </button>
                 </div>
               </>
             ) : popupContent.isAddFinding ? (
@@ -626,7 +645,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
                 </div>
                 <div className="border-t border-gray-200 dark:border-gray-700">
                   {popupContent.id && showViewDetailsLink && (
-                    <div className="p-2">
+                    <div className="p-3">
                       <Link
                         to={`/findings/${popupContent.id}`}
                         className="btn-secondary text-xs flex items-center gap-1 justify-center w-full"
@@ -637,7 +656,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
                     </div>
                   )}
                   {showAddFindingPopup && onEmptyMapClick && popupContent.markerCoordinates && (
-                    <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                       <button
                         onClick={() => {
                           const [lat, lon] = lv95ToWGS84(popupContent.markerCoordinates[0], popupContent.markerCoordinates[1]);
