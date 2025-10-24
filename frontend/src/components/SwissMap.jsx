@@ -165,6 +165,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
           const accuracy = feature.get('accuracy');
 
           setPopupContent({
+            className: 'ol-popup-user-location',
             isUserLocation: true,
             latitude: latitude,
             longitude: longitude,
@@ -181,6 +182,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
             const markerCoordinate = geometry.getCoordinates();
             // Include coordinates in popup content for "Add Finding" button
             setPopupContent({
+              className: 'ol-popup-finding-marker',
               ...data,
               markerCoordinates: markerCoordinate,
             });
@@ -201,6 +203,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
           const [lon, lat] = toLonLat(event.coordinate);
 
           setPopupContent({
+            className: 'ol-popup-add-finding',
             isAddFinding: true,
             latitude: lat,
             longitude: lon,
@@ -484,7 +487,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
       <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
 
       {/* Popup Overlay */}
-      <div ref={popupRef} className={`ol-popup ${popupContent?.isUserLocation ? 'ol-popup-user-location' : ''}`}>
+      <div ref={popupRef} className={`ol-popup ${popupContent?.className || ''}`}>
         {popupContent && (
           <>
             {popupContent.isUserLocation ? (
