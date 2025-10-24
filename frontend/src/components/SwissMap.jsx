@@ -293,6 +293,18 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
     overlayRef.current?.setPosition(undefined);
   };
 
+  // Helper function to center map on coordinates with animation
+  const animateToLocation = (lv95Coords, zoom = 10) => {
+    const view = mapInstance.current?.getView();
+    if (view) {
+      view.animate({
+        center: lv95Coords,
+        zoom: zoom,
+        duration: 500,
+      });
+    }
+  };
+
   const toggleLocationTracking = () => {
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by your browser');
@@ -313,6 +325,11 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
     } else {
       // Start tracking
       setLocationError(null);
+
+      // Center on location when starting tracking
+      centerOnLocation();
+
+      // Start watching position
       watchIdRef.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude, accuracy } = position.coords;
@@ -402,16 +419,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
       (position) => {
         const { latitude, longitude } = position.coords;
         const lv95Coords = wgs84ToLV95(latitude, longitude);
-
-        // Center map on location
-        const view = mapInstance.current?.getView();
-        if (view) {
-          view.animate({
-            center: lv95Coords,
-            zoom: 10,
-            duration: 500,
-          });
-        }
+        animateToLocation(lv95Coords, 10);
       },
       (error) => {
         setLocationError(error.message);
@@ -556,21 +564,36 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
 
           {/* Location Control */}
           {showLocationControl && (
-            <button
-              type="button"
-              onClick={isTrackingLocation ? centerOnLocation : toggleLocationTracking}
-              className={`map-control-button location-tracking-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border transition-colors ${
-                isTrackingLocation
-                  ? 'border-primary-500 dark:border-primary-600'
-                  : 'border-gray-300 dark:border-gray-600'
-              }`}
-              title={isTrackingLocation ? 'Center on my location' : 'Show my location'}
-            >
-              <MapPin
-                size={20}
-                className={isTrackingLocation ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}
-              />
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={toggleLocationTracking}
+                className={`map-control-button location-tracking-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border transition-colors ${
+                  isTrackingLocation
+                    ? 'border-primary-500 dark:border-primary-600'
+                    : 'border-gray-300 dark:border-gray-600'
+                }`}
+                title={isTrackingLocation ? 'Stop tracking location' : 'Track my location'}
+              >
+                <MapPin
+                  size={20}
+                  className={isTrackingLocation ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}
+                />
+              </button>
+              {isTrackingLocation && (
+                <button
+                  type="button"
+                  onClick={centerOnLocation}
+                  className="map-control-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border border-gray-300 dark:border-gray-600 transition-colors"
+                  title="Center on my location"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700 dark:text-gray-300">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           )}
 
           {showLayerPanel && (
