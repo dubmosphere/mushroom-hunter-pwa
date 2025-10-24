@@ -5,7 +5,8 @@ import { format } from 'date-fns';
 import { speciesAPI, findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { wgs84ToLV95 } from '../utils/projections';
-import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
+import { getEdibilityBadgeClasses, getEdibilityMarkerColor } from '../utils/edibilityBadge';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function SpeciesDetail() {
   const { id } = useParams();
@@ -29,8 +30,8 @@ function SpeciesDetail() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
+      <div className="max-w-4xl mx-auto">
+        <LoadingSpinner message="Loading species..." />
       </div>
     );
   }
@@ -232,11 +233,7 @@ function SpeciesDetail() {
                 zoom={8}
                 markers={findingsData.findings.map((finding) => ({
                   coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
-                  color: species.edibility === 'edible' ? '#10b981' :
-                         species.edibility === 'poisonous' ? '#ef4444' :
-                         species.edibility === 'medicinal' ? '#3b82f6' :
-                         species.edibility === 'psychoactive' ? '#a855f7' :
-                         '#6b7280',
+                  color: getEdibilityMarkerColor(species.edibility),
                   data: finding,
                 }))}
                 style={{ height: '100%', width: '100%' }}

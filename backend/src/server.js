@@ -11,6 +11,7 @@ import speciesRoutes from './routes/species.js';
 import findingsRoutes from './routes/findings.js';
 import taxonomyRoutes from './routes/taxonomy.js';
 import { apiLimiter } from './middleware/rateLimiter.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
 
@@ -91,18 +92,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal server error'
-  });
-});
+// 404 handler (must be after all routes)
+app.use(notFoundHandler);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+// Centralized error handling middleware (must be last)
+app.use(errorHandler);
 
 // Database connection and server start
 const startServer = async () => {

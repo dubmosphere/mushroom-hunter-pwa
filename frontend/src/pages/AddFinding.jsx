@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, Map as MapIcon } from 'lucide-react';
 import { findingsAPI, speciesAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
+import { getEdibilityMarkerColor } from '../utils/edibilityBadge';
 
 function AddFinding() {
   const navigate = useNavigate();
@@ -349,11 +350,7 @@ function AddFinding() {
                     onMapClick={handleMapLocationSelect}
                     markers={watch('latitude') && watch('longitude') ? [{
                       coordinates: mapPosition,
-                      color: selectedSpecies?.edibility === 'edible' ? '#10b981' :
-                             selectedSpecies?.edibility === 'poisonous' ? '#ef4444' :
-                             selectedSpecies?.edibility === 'medicinal' ? '#3b82f6' :
-                             selectedSpecies?.edibility === 'psychoactive' ? '#a855f7' :
-                             '#3b82f6',
+                      color: getEdibilityMarkerColor(selectedSpecies?.edibility),
                     }] : []}
                     style={{ height: '100%', width: '100%' }}
                   />

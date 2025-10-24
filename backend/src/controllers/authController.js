@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import { User } from '../models/index.js';
 import { validationResult } from 'express-validator';
+import { ValidationError, AuthenticationError, ConflictError, asyncHandler } from '../utils/errors.js';
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -42,134 +43,116 @@ const clearAuthCookies = (res) => {
   res.clearCookie('refreshToken', { path: '/api/auth' });
 };
 
-export const register = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, username, password } = req.body;
-
-    const existingUser = await User.findOne({
-      where: {
-        [Op.or]: [{ email }, { username }]
-      }
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    const user = await User.create({
-      email,
-      username,
-      password,
-      role: 'user'
-    });
-
-    const accessToken = generateToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    res.status(201).json({
-      user: user.toJSON(),
-      message: 'Registration successful'
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+export const register = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new ValidationError('Validation failed', errors.array());
   }
-};
 
-export const login = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+  const { email, username, password } = req.body;
+
+  const existingUser = await User.findOne({
+    where: {
+      [Op.or]: [{ email }, { username }]
     }
+  });
 
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-
-    if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const isValidPassword = await user.comparePassword(password);
-
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const accessToken = generateToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
-
-    setAuthCookies(res, accessToken, refreshToken);
-
-    res.json({
-      user: user.toJSON(),
-      message: 'Login successful'
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+  if (existingUser) {
+    throw new ConflictError('User with this email or username already exists');
   }
-};
 
-export const getCurrentUser = async (req, res) => {
-  try {
-    res.json({ user: req.user.toJSON() });
-  } catch (error) {
-    console.error('Get current user error:', error);
-    res.status(500).json({ error: 'Failed to get user' });
+  const user = await User.create({
+    email,
+    username,
+    password,
+    role: 'user'
+  });
+
+  const accessToken = generateToken(user.id);
+  const refreshToken = generateRefreshToken(user.id);
+
+  setAuthCookies(res, accessToken, refreshToken);
+
+  res.status(201).json({
+    user: user.toJSON(),
+    message: 'Registration successful'
+  });
+});
+
+export const login = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new ValidationError('Validation failed', errors.array());
   }
-};
 
-export const logout = async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ where: { email } });
+
+  if (!user || !user.isActive) {
+    throw new AuthenticationError('Invalid credentials');
+  }
+
+  const isValidPassword = await user.comparePassword(password);
+
+  if (!isValidPassword) {
+    throw new AuthenticationError('Invalid credentials');
+  }
+
+  const accessToken = generateToken(user.id);
+  const refreshToken = generateRefreshToken(user.id);
+
+  setAuthCookies(res, accessToken, refreshToken);
+
+  res.json({
+    user: user.toJSON(),
+    message: 'Login successful'
+  });
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  res.json({ user: req.user.toJSON() });
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  clearAuthCookies(res);
+  res.json({ message: 'Logged out successfully' });
+});
+
+export const refreshToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    throw new AuthenticationError('No refresh token provided');
+  }
+
+  let decoded;
   try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+  } catch (error) {
     clearAuthCookies(res);
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
+    throw new AuthenticationError('Invalid or expired refresh token');
   }
-};
 
-export const refreshToken = async (req, res) => {
-  try {
-    const refreshToken = req.cookies.refreshToken;
-
-    if (!refreshToken) {
-      return res.status(401).json({ error: 'No refresh token provided' });
-    }
-
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
-
-    if (decoded.type !== 'refresh') {
-      return res.status(401).json({ error: 'Invalid token type' });
-    }
-
-    const user = await User.findByPk(decoded.userId);
-
-    if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid refresh token' });
-    }
-
-    const newAccessToken = generateToken(user.id);
-    const newRefreshToken = generateRefreshToken(user.id);
-
-    setAuthCookies(res, newAccessToken, newRefreshToken);
-
-    res.json({
-      user: user.toJSON(),
-      message: 'Token refreshed successfully'
-    });
-  } catch (error) {
-    console.error('Refresh token error:', error);
+  if (decoded.type !== 'refresh') {
     clearAuthCookies(res);
-    res.status(401).json({ error: 'Invalid or expired refresh token' });
+    throw new AuthenticationError('Invalid token type');
   }
-};
+
+  const user = await User.findByPk(decoded.userId);
+
+  if (!user || !user.isActive) {
+    clearAuthCookies(res);
+    throw new AuthenticationError('Invalid refresh token');
+  }
+
+  const newAccessToken = generateToken(user.id);
+  const newRefreshToken = generateRefreshToken(user.id);
+
+  setAuthCookies(res, newAccessToken, newRefreshToken);
+
+  res.json({
+    user: user.toJSON(),
+    message: 'Token refreshed successfully'
+  });
+});

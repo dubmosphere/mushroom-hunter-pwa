@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Search, Filter, X } from 'lucide-react';
 import { speciesAPI, taxonomyAPI } from '../utils/api';
 import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function SpeciesExplorer() {
   const [filters, setFilters] = useState({
@@ -239,10 +240,7 @@ function SpeciesExplorer() {
 
       {/* Results */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading species...</p>
-        </div>
+        <LoadingSpinner message="Loading species..." />
       ) : (
         <>
           <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">

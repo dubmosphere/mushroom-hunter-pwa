@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { wgs84ToLV95 } from '../utils/projections';
+import { getEdibilityMarkerColor } from '../utils/edibilityBadge';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function FindingsMap() {
   const [center] = useState(() => wgs84ToLV95(46.8182, 8.2275)); // Center of Switzerland in LV95
@@ -30,12 +32,7 @@ function FindingsMap() {
 
 
   if (isLoading) {
-    return (
-      <div className="text-center py-12">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading map...</p>
-      </div>
-    );
+    return <LoadingSpinner message="Loading map..." />;
   }
 
   return (
@@ -89,11 +86,7 @@ function FindingsMap() {
             showAddFindingPopup={true}
             markers={findings?.map((finding) => ({
               coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
-              color: finding.species?.edibility === 'edible' ? '#10b981' :
-                     finding.species?.edibility === 'poisonous' ? '#ef4444' :
-                     finding.species?.edibility === 'medicinal' ? '#3b82f6' :
-                     finding.species?.edibility === 'psychoactive' ? '#a855f7' :
-                     '#6b7280',
+              color: getEdibilityMarkerColor(finding.species?.edibility),
               data: finding,
             })) || []}
             style={{ height: '100%', width: '100%' }}

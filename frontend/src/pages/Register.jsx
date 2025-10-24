@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { authAPI } from '../utils/api';
 import useAuthStore from '../store/authStore';
+import ErrorAlert from '../components/ErrorAlert';
 
 function Register() {
   const navigate = useNavigate();
@@ -50,11 +51,7 @@ function Register() {
         <div className="card">
           <h2 className="text-2xl font-bold mb-6">Register</h2>
 
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 dark:bg-red-900/20 border border-red-200 dark:border-red-800 dark:border-red-800 text-red-700 dark:text-red-400 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
-              {error}
-            </div>
-          )}
+          <ErrorAlert error={error} onDismiss={() => setError('')} />
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>

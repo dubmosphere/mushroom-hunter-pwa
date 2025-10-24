@@ -37,3 +37,22 @@ export const edibilityColors = {
   inedible: 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300',
   unknown: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
 };
+
+/**
+ * Get marker color for edibility (for maps)
+ * Centralized function to avoid duplication across map components
+ * @param {string} edibility - The edibility value
+ * @returns {string} Hex color code for the marker
+ */
+export function getEdibilityMarkerColor(edibility) {
+  const colorMap = {
+    edible: '#10b981',        // green-500
+    poisonous: '#ef4444',     // red-500
+    medicinal: '#3b82f6',     // blue-500
+    psychoactive: '#a855f7',  // purple-500
+    inedible: '#f97316',      // orange-500
+    unknown: '#6b7280',       // gray-500
+  };
+
+  return colorMap[edibility] || colorMap.unknown;
+}

@@ -1,5 +1,6 @@
 import { Species, Genus, Family, Order, Class, Division } from '../models/index.js';
 import { Op, col } from 'sequelize';
+import { FULL_TAXONOMY_INCLUDE, paginateQuery } from '../utils/sequelizeHelpers.js';
 
 export const getAllSpecies = async (req, res) => {
   try {
@@ -17,33 +18,8 @@ export const getAllSpecies = async (req, res) => {
       season
     } = req.query;
 
-    const offset = (page - 1) * limit;
     const where = {};
-    const include = [
-      {
-        model: Genus,
-        as: 'genus',
-        include: [
-          {
-            model: Family,
-            as: 'family',
-            include: [
-              {
-                model: Order,
-                as: 'order',
-                include: [
-                  {
-                    model: Class,
-                    as: 'class',
-                    include: [{ model: Division, as: 'division' }]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ];
+    const include = [FULL_TAXONOMY_INCLUDE];
 
     // Apply filters
     if (search) {
@@ -89,23 +65,17 @@ export const getAllSpecies = async (req, res) => {
       }
     }
 
-    const { count, rows: species } = await Species.findAndCountAll({
+    const result = await paginateQuery(Species, {
       where,
       include,
-      limit: parseInt(limit),
-      offset,
-      order: [['scientificName', 'ASC']],
-      distinct: true
+      page,
+      limit,
+      order: [['scientificName', 'ASC']]
     });
 
     res.json({
-      species,
-      pagination: {
-        total: count,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
-      }
+      species: result.data,
+      pagination: result.pagination
     });
   } catch (error) {
     console.error('Get species error:', error);
@@ -116,31 +86,7 @@ export const getAllSpecies = async (req, res) => {
 export const getSpeciesById = async (req, res) => {
   try {
     const species = await Species.findByPk(req.params.id, {
-      include: [
-        {
-          model: Genus,
-          as: 'genus',
-          include: [
-            {
-              model: Family,
-              as: 'family',
-              include: [
-                {
-                  model: Order,
-                  as: 'order',
-                  include: [
-                    {
-                      model: Class,
-                      as: 'class',
-                      include: [{ model: Division, as: 'division' }]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      include: [FULL_TAXONOMY_INCLUDE]
     });
 
     if (!species) {

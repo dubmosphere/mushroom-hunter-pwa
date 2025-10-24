@@ -4,13 +4,15 @@ import { Link } from 'react-router-dom';
 import { Plus, Trash2, MapPin, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
+import { queryKeys, invalidateResource } from '../utils/queryKeys';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function MyFindings() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
 
   const { data: findingsData, isLoading } = useQuery({
-    queryKey: ['findings', 'my', page],
+    queryKey: queryKeys.findings.myList({ page, limit: 20 }),
     queryFn: async () => {
       const response = await findingsAPI.getAll({ myFindings: true, page, limit: 20 });
       return response.data;
@@ -20,7 +22,11 @@ function MyFindings() {
   const deleteMutation = useMutation({
     mutationFn: (id) => findingsAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['findings']);
+      // Invalidate all findings queries (lists and details)
+      invalidateResource(queryClient, 'findings');
+    },
+    onError: (error) => {
+      alert(`Failed to delete finding: ${error.response?.data?.error?.message || error.message}`);
     },
   });
 
@@ -41,10 +47,7 @@ function MyFindings() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading findings...</p>
-        </div>
+        <LoadingSpinner message="Loading findings..." />
       ) : findingsData?.findings?.length === 0 ? (
         <div className="card text-center py-12">
           <p className="text-gray-600 dark:text-gray-400 mb-4">You haven't recorded any findings yet.</p>
