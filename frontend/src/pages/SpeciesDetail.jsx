@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { speciesAPI, findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { wgs84ToLV95 } from '../utils/projections';
+import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 
 function SpeciesDetail() {
   const { id } = useParams();
@@ -62,11 +63,7 @@ function SpeciesDetail() {
               <p className="text-xl text-gray-600 dark:text-gray-400">{species.commonName}</p>
             )}
           </div>
-          <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-            species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-            'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-          }`}>
+          <span className={getEdibilityBadgeClasses(species.edibility, 'lg')}>
             {species.edibility?.toUpperCase()}
           </span>
         </div>

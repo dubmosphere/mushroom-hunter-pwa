@@ -26,8 +26,8 @@ function AddFinding() {
     defaultValues: {
       speciesId: location.state?.speciesId || '',
       foundAt: new Date().toISOString().slice(0, 16),
-      latitude: '',
-      longitude: '',
+      latitude: location.state?.latitude?.toFixed(8) || '',
+      longitude: location.state?.longitude?.toFixed(8) || '',
       location: '',
       notes: '',
       quantity: 1,
@@ -35,6 +35,20 @@ function AddFinding() {
       temperature: '',
     },
   });
+
+  // If coordinates came from map, fetch location name and update map position
+  useEffect(() => {
+    if (location.state?.fromMap && location.state?.latitude && location.state?.longitude) {
+      const lat = location.state.latitude;
+      const lon = location.state.longitude;
+
+      // Update map position
+      setMapPosition(wgs84ToLV95(lat, lon));
+
+      // Fetch location name via reverse geocoding
+      reverseGeocode(lat, lon);
+    }
+  }, [location.state]);
 
   const speciesId = watch('speciesId');
 

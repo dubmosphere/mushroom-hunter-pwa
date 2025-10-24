@@ -14,8 +14,9 @@ import { get as getProjection } from 'ol/proj';
 import { register } from 'ol/proj/proj4';
 import Overlay from 'ol/Overlay';
 import proj4 from 'proj4';
-import { Layers, X, Eye, MapPin, Calendar } from 'lucide-react';
-import { wgs84ToLV95 } from '../utils/projections';
+import { Layers, X, Eye, MapPin, Calendar, Plus } from 'lucide-react';
+import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
+import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 import 'ol/ol.css';
 
 // Define Swiss LV95 projection (EPSG:2056)
@@ -54,12 +55,13 @@ const resolutions = [
  * Swiss Map Component using OpenLayers
  * Displays Swiss Federal Geoportal tiles in EPSG:2056 projection
  */
-function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers = [], style = {}, onMarkerClick, showLocationControl = true, showViewDetailsLink = true }) {
+function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMapClick, markers = [], style = {}, onMarkerClick, showLocationControl = true, showViewDetailsLink = true, showAddFindingPopup = false }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const popupRef = useRef(null);
   const overlayRef = useRef(null);
   const locationLayerRef = useRef(null);
+  const tempMarkerLayerRef = useRef(null);
   const watchIdRef = useRef(null);
   const [currentLayer, setCurrentLayer] = useState('color');
   const [showLayerPanel, setShowLayerPanel] = useState(false);
@@ -123,10 +125,18 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
     });
     locationLayerRef.current = locationLayer;
 
+    // Create temporary marker layer for "Add Finding" popup
+    const tempMarkerSource = new VectorSource();
+    const tempMarkerLayer = new VectorLayer({
+      source: tempMarkerSource,
+      zIndex: 999,
+    });
+    tempMarkerLayerRef.current = tempMarkerLayer;
+
     // Create map
     const map = new Map({
       target: mapRef.current,
-      layers: [tileLayer, vectorLayer, locationLayer],
+      layers: [tileLayer, vectorLayer, locationLayer, tempMarkerLayer],
       view: new View({
         projection: projection,
         center: center,
@@ -185,7 +195,11 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
             // Show popup with marker data at the marker's position
             const geometry = feature.getGeometry();
             const markerCoordinate = geometry.getCoordinates();
-            setPopupContent(data);
+            // Include coordinates in popup content for "Add Finding" button
+            setPopupContent({
+              ...data,
+              markerCoordinates: markerCoordinate,
+            });
             overlayRef.current?.setPosition(markerCoordinate);
 
             // Call optional marker click handler
@@ -198,10 +212,53 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
         // Clicked on empty map area
         if (onMapClick) {
           onMapClick(event.coordinate);
+        } else if (showAddFindingPopup && onEmptyMapClick) {
+          // Show "Add Finding" popup at clicked location
+          const [lat, lon] = lv95ToWGS84(event.coordinate[0], event.coordinate[1]);
+
+          setPopupContent({
+            isAddFinding: true,
+            latitude: lat,
+            longitude: lon,
+            coordinates: event.coordinate,
+          });
+          overlayRef.current?.setPosition(event.coordinate);
+
+          // Add temporary marker at clicked location
+          const tempMarkerSource = tempMarkerLayerRef.current?.getSource();
+          if (tempMarkerSource) {
+            tempMarkerSource.clear();
+
+            const tempFeature = new Feature({
+              geometry: new Point(event.coordinate),
+            });
+
+            // Create a gray dashed circle marker
+            tempFeature.setStyle(new Style({
+              image: new Circle({
+                radius: 8,
+                stroke: new Stroke({
+                  color: '#fa0000',
+                  width: 2,
+                  lineDash: [4, 4],
+                }),
+                fill: new Fill({
+                  color: 'rgba(156, 163, 175, 0.5)',
+                }),
+              }),
+            }));
+
+            tempMarkerSource.addFeature(tempFeature);
+          }
         } else {
           // Close popup if clicking on empty area
           setPopupContent(null);
           overlayRef.current?.setPosition(undefined);
+          // Clear temporary marker
+          const tempMarkerSource = tempMarkerLayerRef.current?.getSource();
+          if (tempMarkerSource) {
+            tempMarkerSource.clear();
+          }
         }
       }
     });
@@ -220,7 +277,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
       }
       map.setTarget(null);
     };
-  }, []);
+  }, [showAddFindingPopup, onEmptyMapClick]);
 
   // Update markers when they change
   useEffect(() => {
@@ -291,6 +348,11 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
   const closePopup = () => {
     setPopupContent(null);
     overlayRef.current?.setPosition(undefined);
+    // Clear temporary marker when closing popup
+    const tempMarkerSource = tempMarkerLayerRef.current?.getSource();
+    if (tempMarkerSource) {
+      tempMarkerSource.clear();
+    }
   };
 
   // Helper function to center map on coordinates with animation
@@ -470,6 +532,42 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
                   )}
                 </div>
               </>
+            ) : popupContent.isAddFinding ? (
+              // Add Finding Popup
+              <>
+                <div className="flex items-start justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                      Add Finding Here
+                    </h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                      {popupContent.latitude.toFixed(6)}, {popupContent.longitude.toFixed(6)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={closePopup}
+                    className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="p-3">
+                  <button
+                    onClick={() => {
+                      if (onEmptyMapClick) {
+                        onEmptyMapClick(popupContent.coordinates, {
+                          latitude: popupContent.latitude,
+                          longitude: popupContent.longitude,
+                        });
+                      }
+                    }}
+                    className="btn-primary text-xs flex items-center gap-2 justify-center w-full"
+                  >
+                    <Plus size={14} />
+                    Add Finding at This Location
+                  </button>
+                </div>
+              </>
             ) : (
               // Finding Marker Popup
               <>
@@ -520,29 +618,42 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
                   )}
                   {popupContent.species?.edibility && (
                     <p>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        popupContent.species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                        popupContent.species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                        popupContent.species.edibility === 'medicinal' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                        popupContent.species.edibility === 'psychoactive' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300' :
-                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                      }`}>
+                      <span className={getEdibilityBadgeClasses(popupContent.species.edibility, 'sm')}>
                         {popupContent.species.edibility}
                       </span>
                     </p>
                   )}
                 </div>
-                {popupContent.id && showViewDetailsLink && (
-                  <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-                    <Link
-                      to={`/findings/${popupContent.id}`}
-                      className="btn-secondary text-xs flex items-center gap-1 justify-center w-full"
-                    >
-                      <Eye size={14} />
-                      View Details
-                    </Link>
-                  </div>
-                )}
+                <div className="border-t border-gray-200 dark:border-gray-700">
+                  {popupContent.id && showViewDetailsLink && (
+                    <div className="p-2">
+                      <Link
+                        to={`/findings/${popupContent.id}`}
+                        className="btn-secondary text-xs flex items-center gap-1 justify-center w-full"
+                      >
+                        <Eye size={14} />
+                        View Details
+                      </Link>
+                    </div>
+                  )}
+                  {showAddFindingPopup && onEmptyMapClick && popupContent.markerCoordinates && (
+                    <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => {
+                          const [lat, lon] = lv95ToWGS84(popupContent.markerCoordinates[0], popupContent.markerCoordinates[1]);
+                          onEmptyMapClick(popupContent.markerCoordinates, {
+                            latitude: lat,
+                            longitude: lon,
+                          });
+                        }}
+                        className="btn-primary text-xs flex items-center gap-2 justify-center w-full"
+                      >
+                        <Plus size={14} />
+                        Add Finding at This Location
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>

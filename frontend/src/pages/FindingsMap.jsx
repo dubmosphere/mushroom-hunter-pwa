@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
-import { format } from 'date-fns';
+import { Link, useNavigate } from 'react-router-dom';
 import { findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { wgs84ToLV95 } from '../utils/projections';
 
 function FindingsMap() {
   const [center] = useState(() => wgs84ToLV95(46.8182, 8.2275)); // Center of Switzerland in LV95
+  const navigate = useNavigate();
 
   const { data: findings, isLoading } = useQuery({
     queryKey: ['findings', 'map'],
@@ -17,6 +16,17 @@ function FindingsMap() {
       return response.data;
     },
   });
+
+  const handleAddFindingClick = (_coordinate, locationInfo) => {
+    // Navigate to add finding page with coordinates
+    navigate('/findings/new', {
+      state: {
+        latitude: locationInfo.latitude,
+        longitude: locationInfo.longitude,
+        fromMap: true,
+      }
+    });
+  };
 
 
   if (isLoading) {
@@ -66,10 +76,17 @@ function FindingsMap() {
 
       {/* Map */}
       <div className="card p-0 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            💡 Tip: Click anywhere on the map to add a new finding at that location
+          </p>
+        </div>
         <div style={{ height: '600px', width: '100%', position: 'relative' }}>
           <SwissMap
             center={center}
             zoom={3}
+            onEmptyMapClick={handleAddFindingClick}
+            showAddFindingPopup={true}
             markers={findings?.map((finding) => ({
               coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
               color: finding.species?.edibility === 'edible' ? '#10b981' :

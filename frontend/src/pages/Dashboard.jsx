@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, MapPin, List, Plus, Eye } from 'lucide-react';
 import { findingsAPI, speciesAPI } from '../utils/api';
 import useAuthStore from '../store/authStore';
+import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 
 function Dashboard() {
   const user = useAuthStore((state) => state.user);
@@ -146,9 +147,9 @@ function Dashboard() {
           <div className="space-y-3">
             {recentFindings.findings.slice(0, 5).map((finding) => (
               <div key={finding.id} className="card hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
+                <div>
+                  <div className="flex items-start justify-between gap-3 mb-1">
+                    <div className="flex items-center gap-3">
                       <Link
                         to={`/species/${finding.species.id}`}
                         className="font-semibold text-primary-700 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 italic"
@@ -164,23 +165,19 @@ function Dashboard() {
                         Details
                       </Link>
                     </div>
-                    {finding.species.commonName && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{finding.species.commonName}</p>
-                    )}
-                    {finding.location && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                        <MapPin size={12} />
-                        {finding.location}
-                      </p>
-                    )}
+                    <span className={getEdibilityBadgeClasses(finding.species.edibility, 'sm')}>
+                      {finding.species.edibility}
+                    </span>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    finding.species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                    finding.species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                    'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                  }`}>
-                    {finding.species.edibility}
-                  </span>
+                  {finding.species.commonName && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{finding.species.commonName}</p>
+                  )}
+                  {finding.location && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                      <MapPin size={12} />
+                      {finding.location}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { wgs84ToLV95 } from '../utils/projections';
+import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 
 function FindingDetail() {
   const { id } = useParams();
@@ -55,15 +56,6 @@ function FindingDetail() {
     );
   }
 
-  const edibilityColors = {
-    edible: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
-    poisonous: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
-    inedible: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
-    medicinal: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
-    psychoactive: 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
-    unknown: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-  };
-
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
@@ -101,7 +93,7 @@ function FindingDetail() {
               )}
             </div>
             {finding.species.edibility && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${edibilityColors[finding.species.edibility] || edibilityColors.unknown}`}>
+              <span className={getEdibilityBadgeClasses(finding.species.edibility, 'lg')}>
                 {finding.species.edibility}
               </span>
             )}

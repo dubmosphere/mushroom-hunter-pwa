@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Search, Filter, X } from 'lucide-react';
 import { speciesAPI, taxonomyAPI } from '../utils/api';
+import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 
 function SpeciesExplorer() {
   const [filters, setFilters] = useState({
@@ -257,11 +258,7 @@ function SpeciesExplorer() {
               >
                 <div className="flex items-start justify-between mb-2">
                   <h3 className="font-semibold text-lg italic">{species.scientificName}</h3>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    species.edibility === 'edible' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                    species.edibility === 'poisonous' ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300' :
-                    'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                  }`}>
+                  <span className={getEdibilityBadgeClasses(species.edibility, 'sm')}>
                     {species.edibility}
                   </span>
                 </div>
