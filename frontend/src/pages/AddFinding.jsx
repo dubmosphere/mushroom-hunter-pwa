@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { ArrowLeft, MapPin, Map as MapIcon } from 'lucide-react';
 import { findingsAPI, speciesAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
-import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
+import { fromLonLat, toLonLat } from 'ol/proj';
 import { getEdibilityMarkerColor } from '../utils/edibilityBadge';
 
 function AddFinding() {
@@ -15,7 +15,7 @@ function AddFinding() {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [mapPosition, setMapPosition] = useState(() => wgs84ToLV95(46.8182, 8.2275)); // Switzerland center in LV95
+  const [mapPosition, setMapPosition] = useState(() => fromLonLat([8.2275, 46.8182])); // Switzerland center in EPSG:3857
 
   const {
     register,
@@ -44,7 +44,7 @@ function AddFinding() {
       const lon = location.state.longitude;
 
       // Update map position
-      setMapPosition(wgs84ToLV95(lat, lon));
+      setMapPosition(fromLonLat([lon, lat]));
 
       // Fetch location name via reverse geocoding
       reverseGeocode(lat, lon);
@@ -128,8 +128,8 @@ function AddFinding() {
   };
 
   const handleMapLocationSelect = async (coordinate) => {
-    // coordinate is [east, north] in LV95, convert to WGS84
-    const [lat, lon] = lv95ToWGS84(coordinate[0], coordinate[1]);
+    // coordinate is in EPSG:3857, convert to WGS84
+    const [lon, lat] = toLonLat(coordinate);
     const latFixed = lat.toFixed(8);
     const lonFixed = lon.toFixed(8);
 
@@ -159,9 +159,9 @@ function AddFinding() {
         setValue('latitude', lat);
         setValue('longitude', lon);
 
-        // Convert to LV95 for map display
-        const lv95Coords = wgs84ToLV95(position.coords.latitude, position.coords.longitude);
-        setMapPosition(lv95Coords);
+        // Convert to EPSG:3857 for map display
+        const coords3857 = fromLonLat([position.coords.longitude, position.coords.latitude]);
+        setMapPosition(coords3857);
 
         // Try to get location name
         const locationName = await reverseGeocode(lat, lon);

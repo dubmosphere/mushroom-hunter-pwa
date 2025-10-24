@@ -1,14 +1,11 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
-import { wgs84ToLV95 } from '../utils/projections';
 import { getEdibilityMarkerColor } from '../utils/edibilityBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function FindingsMap() {
-  const [center] = useState(() => wgs84ToLV95(46.8182, 8.2275)); // Center of Switzerland in LV95
   const navigate = useNavigate();
 
   const { data: findings, isLoading } = useQuery({
@@ -80,12 +77,10 @@ function FindingsMap() {
         </div>
         <div style={{ height: '600px', width: '100%', position: 'relative' }}>
           <SwissMap
-            center={center}
-            zoom={3}
+            zoom={9}
             onEmptyMapClick={handleAddFindingClick}
             showAddFindingPopup={true}
             markers={findings?.map((finding) => ({
-              coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
               color: getEdibilityMarkerColor(finding.species?.edibility),
               data: finding,
             })) || []}

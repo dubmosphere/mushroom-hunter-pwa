@@ -7,53 +7,47 @@ import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
+import { fromExtent } from 'ol/geom/Polygon';
 import { Style, Circle, Fill, Stroke, Icon } from 'ol/style';
-import WMTS from 'ol/source/WMTS';
-import WMTSTileGrid from 'ol/tilegrid/WMTS';
-import { get as getProjection } from 'ol/proj';
+import XYZ from 'ol/source/XYZ';
+import { fromLonLat, toLonLat } from 'ol/proj';
 import Overlay from 'ol/Overlay';
+import { getCenter } from 'ol/extent';
 import { Layers, X, Eye, MapPin, Calendar, Plus } from 'lucide-react';
-import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
 import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 import 'ol/ol.css';
 
-// Import centralized projection registration
-// This ensures proj4 projections are defined and registered with OpenLayers
-import '../utils/projections';
-
-const projection = getProjection('EPSG:2056');
-projection.setExtent([2420000, 1030000, 2900000, 1350000]);
-
-// Swiss map layers with their maximum zoom levels
+// Swiss map layers with their maximum zoom levels (EPSG:3857)
 const SWISS_LAYERS = {
   color: {
     name: 'Color Map',
     layer: 'ch.swisstopo.pixelkarte-farbe',
-    maxZoom: 27,
+    maxZoom: 19,
   },
   grey: {
     name: 'Grey Map',
     layer: 'ch.swisstopo.pixelkarte-grau',
-    maxZoom: 27,
+    maxZoom: 19,
   },
   aerial: {
     name: 'Aerial Imagery',
     layer: 'ch.swisstopo.swissimage',
-    maxZoom: 28,
+    maxZoom: 20,
   },
 };
 
-// WMTS resolutions for Swiss projection (EPSG:2056)
-const resolutions = [
-  4000, 3750, 3500, 3250, 3000, 2750, 2500, 2250, 2000, 1750, 1500, 1250,
-  1000, 750, 650, 500, 250, 100, 50, 20, 10, 5, 2.5, 2, 1.5, 1, 0.5
-];
+// Calculate Swiss extent exactly like the working example
+const extent = fromLonLat([5.140242, 45.398181]).concat(fromLonLat([11.47757, 48.230651]));
+const extentPolygon = fromExtent(extent);
+extentPolygon.scale(1.5);
+const swissExtent = extentPolygon.getExtent();
+const swissCenterCoords = getCenter(swissExtent);
 
 /**
  * Swiss Map Component using OpenLayers
- * Displays Swiss Federal Geoportal tiles in EPSG:2056 projection
+ * Displays Swiss Federal Geoportal tiles in EPSG:3857 projection (Web Mercator)
  */
-function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMapClick, markers = [], style = {}, onMarkerClick, showLocationControl = true, showViewDetailsLink = true, showAddFindingPopup = false }) {
+function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [], style = {}, onMarkerClick, showLocationControl = true, showViewDetailsLink = true, showAddFindingPopup = false }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const popupRef = useRef(null);
@@ -67,38 +61,27 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
   const [isTrackingLocation, setIsTrackingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
 
+  // Default center if not provided - use calculated center from extent
+  const mapCenter = center || swissCenterCoords;
+
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Create WMTS source
-    const createWMTSSource = (layerName, maxZoom) => {
-      const layerResolutions = resolutions.slice(0, maxZoom + 1);
-      const layerMatrixIds = layerResolutions.map((_, i) => i.toString());
-
-      return new WMTS({
-        url: 'https://wmts.geo.admin.ch/1.0.0/' + layerName + '/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg',
-        layer: layerName,
-        matrixSet: '2056',
-        format: 'image/jpeg',
-        projection: projection,
-        tileGrid: new WMTSTileGrid({
-          origin: [2420000, 1350000],
-          resolutions: layerResolutions,
-          matrixIds: layerMatrixIds,
-          extent: [2420000, 1030000, 2900000, 1350000], // Swiss bounds
-        }),
-        style: 'default',
-        requestEncoding: 'REST',
+    // Create XYZ source for swisstopo tiles (EPSG:3857)
+    const createXYZSource = (layerName) => {
+      return new XYZ({
+        url: `https://wmts.geo.admin.ch/1.0.0/${layerName}/default/current/3857/{z}/{x}/{y}.jpeg`,
+        attributions: '© <a href="https://www.swisstopo.admin.ch/" target="_blank">swisstopo</a>',
+        maxZoom: SWISS_LAYERS[currentLayer].maxZoom,
       });
     };
 
-    // Create tile layer
+    // Create tile layer - matching working example configuration
     const tileLayer = new TileLayer({
-      source: createWMTSSource(SWISS_LAYERS[currentLayer].layer, SWISS_LAYERS[currentLayer].maxZoom),
+      source: createXYZSource(SWISS_LAYERS[currentLayer].layer),
+      extent: extent,
+      preload: 1, // Preload one level for smoother rendering
     });
-
-    // Add attribution to the source
-    tileLayer.getSource().setAttributions('© <a href="https://www.swisstopo.admin.ch/" target="_blank">swisstopo</a>');
 
     // Create vector source for markers
     const vectorSource = new VectorSource();
@@ -139,12 +122,9 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
       target: mapRef.current,
       layers: [tileLayer, vectorLayer, locationLayer, tempMarkerLayer],
       view: new View({
-        projection: projection,
-        center: center,
+        center: mapCenter,
         zoom: zoom,
-        minZoom: 0,
-        maxZoom: SWISS_LAYERS[currentLayer].maxZoom,
-        extent: [2420000, 1030000, 2900000, 1350000], // Restrict view to Swiss bounds
+        extent: swissExtent,
       }),
     });
 
@@ -187,6 +167,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
             latitude: latitude,
             longitude: longitude,
             accuracy: accuracy,
+            coordinates: markerCoordinate,
           });
           overlayRef.current?.setPosition(markerCoordinate);
         } else {
@@ -215,7 +196,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
           onMapClick(event.coordinate);
         } else if (showAddFindingPopup && onEmptyMapClick) {
           // Show "Add Finding" popup at clicked location
-          const [lat, lon] = lv95ToWGS84(event.coordinate[0], event.coordinate[1]);
+          const [lon, lat] = toLonLat(event.coordinate);
 
           setPopupContent({
             isAddFinding: true,
@@ -278,7 +259,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
       }
       map.setTarget(null);
     };
-  }, [showAddFindingPopup, onEmptyMapClick]);
+  }, [mapCenter, zoom, showAddFindingPopup, onEmptyMapClick, currentLayer]);
 
   // Update markers when they change
   useEffect(() => {
@@ -292,11 +273,19 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
     // Clear existing markers
     vectorSource.clear();
 
-    // Add new markers
+    // Add new markers (convert from WGS84 to EPSG:3857 if needed)
     if (markers && markers.length > 0) {
       markers.forEach((marker) => {
+        // Check if coordinates are in lon/lat or already in Web Mercator
+        let coords = marker.coordinates;
+
+        // If marker has latitude/longitude, use those and convert
+        if (marker.data?.latitude && marker.data?.longitude) {
+          coords = fromLonLat([marker.data.longitude, marker.data.latitude]);
+        }
+
         const feature = new Feature({
-          geometry: new Point(marker.coordinates),
+          geometry: new Point(coords),
           color: marker.color || '#3b82f6',
           data: marker.data,
         });
@@ -313,32 +302,16 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
     const layers = map.getLayers();
     const tileLayer = layers.item(0);
 
-    const createWMTSSource = (layerName, maxZoom) => {
-      const layerResolutions = resolutions.slice(0, maxZoom + 1);
-      const layerMatrixIds = layerResolutions.map((_, i) => i.toString());
-
-      return new WMTS({
-        url: 'https://wmts.geo.admin.ch/1.0.0/' + layerName + '/default/current/2056/{TileMatrix}/{TileCol}/{TileRow}.jpeg',
-        layer: layerName,
-        matrixSet: '2056',
-        format: 'image/jpeg',
-        projection: projection,
-        tileGrid: new WMTSTileGrid({
-          origin: [2420000, 1350000],
-          resolutions: layerResolutions,
-          matrixIds: layerMatrixIds,
-          extent: [2420000, 1030000, 2900000, 1350000], // Swiss bounds
-        }),
-        style: 'default',
-        requestEncoding: 'REST',
+    const createXYZSource = (layerName) => {
+      return new XYZ({
+        url: `https://wmts.geo.admin.ch/1.0.0/${layerName}/default/current/3857/{z}/{x}/{y}.jpeg`,
+        attributions: '© <a href="https://www.swisstopo.admin.ch/" target="_blank">swisstopo</a>',
+        maxZoom: SWISS_LAYERS[currentLayer].maxZoom,
       });
     };
 
-    tileLayer.setSource(createWMTSSource(SWISS_LAYERS[currentLayer].layer, SWISS_LAYERS[currentLayer].maxZoom));
-
-    // Update view's maxZoom when layer changes
-    const view = map.getView();
-    view.setMaxZoom(SWISS_LAYERS[currentLayer].maxZoom);
+    tileLayer.setSource(createXYZSource(SWISS_LAYERS[currentLayer].layer));
+    tileLayer.setExtent(extent);
   }, [currentLayer]);
 
   const handleLayerChange = (layerKey) => {
@@ -357,12 +330,12 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
   };
 
   // Helper function to center map on coordinates with animation
-  const animateToLocation = (lv95Coords, zoom = 10) => {
+  const animateToLocation = (coords3857, zoomLevel = 15) => {
     const view = mapInstance.current?.getView();
     if (view) {
       view.animate({
-        center: lv95Coords,
-        zoom: zoom,
+        center: coords3857,
+        zoom: zoomLevel,
         duration: 500,
       });
     }
@@ -397,8 +370,8 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
         (position) => {
           const { latitude, longitude, accuracy } = position.coords;
 
-          // Convert WGS84 to LV95
-          const lv95Coords = wgs84ToLV95(latitude, longitude);
+          // Convert WGS84 to EPSG:3857
+          const coords3857 = fromLonLat([longitude, latitude]);
 
           // Update location marker
           const locationSource = locationLayerRef.current?.getSource();
@@ -407,7 +380,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
 
             // Add position marker
             const positionFeature = new Feature({
-              geometry: new Point(lv95Coords),
+              geometry: new Point(coords3857),
               isUserLocation: true,
               latitude: latitude,
               longitude: longitude,
@@ -481,8 +454,8 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        const lv95Coords = wgs84ToLV95(latitude, longitude);
-        animateToLocation(lv95Coords, 10);
+        const coords3857 = fromLonLat([longitude, latitude]);
+        animateToLocation(coords3857, 15);
       },
       (error) => {
         setLocationError(error.message);
@@ -657,7 +630,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, onEmptyMa
                     <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                       <button
                         onClick={() => {
-                          const [lat, lon] = lv95ToWGS84(popupContent.markerCoordinates[0], popupContent.markerCoordinates[1]);
+                          const [lon, lat] = toLonLat(popupContent.markerCoordinates);
                           onEmptyMapClick(popupContent.markerCoordinates, {
                             latitude: lat,
                             longitude: lon,

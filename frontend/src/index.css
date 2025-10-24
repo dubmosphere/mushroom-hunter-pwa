@@ -71,4 +71,10 @@
     flex-grow: 0;
     align-self: flex-end;
   }
+
+}
+
+.ol-viewport {
+  background-image: radial-gradient(#444 1px, transparent 0);
+  background-size: 40px 40px;
 }
