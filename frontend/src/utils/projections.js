@@ -1,8 +1,20 @@
 import proj4 from 'proj4';
+import { register } from 'ol/proj/proj4';
 
-// Define projections
-proj4.defs('EPSG:2056', '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs');
-proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
+// Swiss LV95 projection definition (EPSG:2056)
+// This is the official Swiss national coordinate system
+const EPSG_2056_DEFINITION = '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs';
+
+// WGS84 projection definition (EPSG:4326)
+const EPSG_4326_DEFINITION = '+proj=longlat +datum=WGS84 +no_defs';
+
+// Define projections for proj4
+proj4.defs('EPSG:2056', EPSG_2056_DEFINITION);
+proj4.defs('EPSG:4326', EPSG_4326_DEFINITION);
+
+// Register proj4 with OpenLayers (for use in map components)
+// This ensures both proj4 and OpenLayers use the same projection definitions
+register(proj4);
 
 /**
  * Convert WGS84 lat/lon to Swiss LV95 coordinates

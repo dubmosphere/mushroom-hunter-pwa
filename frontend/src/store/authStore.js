@@ -5,18 +5,17 @@ const useAuthStore = create(
   persist(
     (set) => ({
       user: null,
-      token: null,
       isAuthenticated: false,
 
-      setAuth: (user, token) => set({
+      // Set user after successful login/register
+      // Token is now stored in httpOnly cookies, not in localStorage
+      setAuth: (user) => set({
         user,
-        token,
         isAuthenticated: true
       }),
 
       logout: () => set({
         user: null,
-        token: null,
         isAuthenticated: false
       }),
 
@@ -24,6 +23,11 @@ const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
+      // Only persist user data, not tokens
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated
+      }),
     }
   )
 );

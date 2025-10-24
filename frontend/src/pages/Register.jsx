@@ -25,7 +25,8 @@ function Register() {
       setError('');
       const { confirmPassword, ...registerData } = data;
       const response = await authAPI.register(registerData);
-      setAuth(response.data.user, response.data.token);
+      // Token is now in httpOnly cookie, only store user data
+      setAuth(response.data.user);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed');

@@ -11,17 +11,15 @@ import { Style, Circle, Fill, Stroke, Icon } from 'ol/style';
 import WMTS from 'ol/source/WMTS';
 import WMTSTileGrid from 'ol/tilegrid/WMTS';
 import { get as getProjection } from 'ol/proj';
-import { register } from 'ol/proj/proj4';
 import Overlay from 'ol/Overlay';
-import proj4 from 'proj4';
 import { Layers, X, Eye, MapPin, Calendar, Plus } from 'lucide-react';
 import { wgs84ToLV95, lv95ToWGS84 } from '../utils/projections';
 import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
 import 'ol/ol.css';
 
-// Define Swiss LV95 projection (EPSG:2056)
-proj4.defs('EPSG:2056', '+proj=somerc +lat_0=46.95240555555556 +lon_0=7.439583333333333 +k_0=1 +x_0=2600000 +y_0=1200000 +ellps=bessel +towgs84=674.374,15.056,405.346,0,0,0,0 +units=m +no_defs');
-register(proj4);
+// Import centralized projection registration
+// This ensures proj4 projections are defined and registered with OpenLayers
+import '../utils/projections';
 
 const projection = getProjection('EPSG:2056');
 projection.setExtent([2420000, 1030000, 2900000, 1350000]);

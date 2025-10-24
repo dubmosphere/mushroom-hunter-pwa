@@ -2,15 +2,24 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Home, Search, MapPin, List, LogOut, Moon, Sun } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
+import { authAPI } from '../utils/api';
 
 function Layout() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { isDarkMode, toggleDarkMode } = useThemeStore();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear httpOnly cookies
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state regardless of API call result
+      logout();
+      navigate('/login');
+    }
   };
 
   return (
