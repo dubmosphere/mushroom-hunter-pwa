@@ -54,7 +54,7 @@ const resolutions = [
  * Swiss Map Component using OpenLayers
  * Displays Swiss Federal Geoportal tiles in EPSG:2056 projection
  */
-function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers = [], style = {}, onMarkerClick, showLocationControl = true }) {
+function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers = [], style = {}, onMarkerClick, showLocationControl = true, showViewDetailsLink = true }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const popupRef = useRef(null);
@@ -532,7 +532,7 @@ function SwissMap({ center = [2660000, 1190000], zoom = 1, onMapClick, markers =
                     </p>
                   )}
                 </div>
-                {popupContent.id && (
+                {popupContent.id && showViewDetailsLink && (
                   <div className="p-2 border-t border-gray-200 dark:border-gray-700">
                     <Link
                       to={`/findings/${popupContent.id}`}

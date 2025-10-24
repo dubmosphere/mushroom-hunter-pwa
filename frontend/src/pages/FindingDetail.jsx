@@ -219,6 +219,7 @@ function FindingDetail() {
                        '#6b7280',
                 data: finding,
               }]}
+              showViewDetailsLink={false}
               style={{ height: '100%', width: '100%' }}
             />
           </div>
