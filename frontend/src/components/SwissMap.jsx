@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -13,8 +12,11 @@ import XYZ from 'ol/source/XYZ';
 import { fromLonLat, toLonLat } from 'ol/proj';
 import Overlay from 'ol/Overlay';
 import { getCenter } from 'ol/extent';
-import { Layers, X, Eye, MapPin, Calendar, Plus } from 'lucide-react';
-import { getEdibilityBadgeClasses } from '../utils/edibilityBadge';
+import UserLocationPopup from './map/UserLocationPopup';
+import AddFindingPopup from './map/AddFindingPopup';
+import FindingMarkerPopup from './map/FindingMarkerPopup';
+import MapControls from './map/MapControls';
+import LocationErrorToast from './map/LocationErrorToast';
 import 'ol/ol.css';
 
 // Swiss map layers with their maximum zoom levels (EPSG:3857)
@@ -319,6 +321,10 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
     setShowLayerPanel(false);
   };
 
+  const toggleLayerPanel = () => {
+    setShowLayerPanel(!showLayerPanel);
+  };
+
   const closePopup = () => {
     setPopupContent(null);
     overlayRef.current?.setPosition(undefined);
@@ -475,257 +481,46 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
       {/* Popup Overlay */}
       <div ref={popupRef} className={`ol-popup ${popupContent?.isUserLocation ? 'ol-popup-user-location' : ''}`}>
         {popupContent && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-300 dark:border-gray-600 min-w-[200px] max-w-[300px]">
+          <>
             {popupContent.isUserLocation ? (
-              // User Location Popup
-              <>
-                <div className="flex items-start justify-between p-3 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
-                      My Position
-                    </h3>
-                  </div>
-                  <button
-                    onClick={closePopup}
-                    className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="p-3 border-b border-gray-200 dark:border-gray-700 space-y-2 text-xs">
-                  <p className="text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">Latitude:</span> {popupContent.latitude.toFixed(6)}
-                  </p>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    <span className="font-medium">Longitude:</span> {popupContent.longitude.toFixed(6)}
-                  </p>
-                  {popupContent.accuracy && (
-                    <p className="text-gray-700 dark:text-gray-300">
-                      <span className="font-medium">Accuracy:</span> ±{Math.round(popupContent.accuracy)}m
-                    </p>
-                  )}
-                </div>
-                <div className="p-3">
-                  <button
-                    onClick={() => {
-                      if (onEmptyMapClick) {
-                        onEmptyMapClick(popupContent.coordinates, {
-                          latitude: popupContent.latitude,
-                          longitude: popupContent.longitude,
-                        });
-                      }
-                    }}
-                    className="btn-primary text-xs flex items-center gap-2 justify-center w-full"
-                  >
-                    <Plus size={14} />
-                    Add Finding at This Location
-                  </button>
-                </div>
-              </>
+              <UserLocationPopup
+                popupContent={popupContent}
+                onClose={closePopup}
+                onAddFinding={onEmptyMapClick}
+              />
             ) : popupContent.isAddFinding ? (
-              // Add Finding Popup
-              <>
-                <div className="flex items-start justify-between p-3 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">
-                      Add Finding Here
-                    </h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                      {popupContent.latitude.toFixed(6)}, {popupContent.longitude.toFixed(6)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={closePopup}
-                    className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="p-3">
-                  <button
-                    onClick={() => {
-                      if (onEmptyMapClick) {
-                        onEmptyMapClick(popupContent.coordinates, {
-                          latitude: popupContent.latitude,
-                          longitude: popupContent.longitude,
-                        });
-                      }
-                    }}
-                    className="btn-primary text-xs flex items-center gap-2 justify-center w-full"
-                  >
-                    <Plus size={14} />
-                    Add Finding at This Location
-                  </button>
-                </div>
-              </>
+              <AddFindingPopup
+                popupContent={popupContent}
+                onClose={closePopup}
+                onAddFinding={onEmptyMapClick}
+              />
             ) : (
-              // Finding Marker Popup
-              <>
-                <div className="flex items-start justify-between p-3 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex-1">
-                    {popupContent.species?.id ? (
-                      <Link
-                        to={`/species/${popupContent.species.id}`}
-                        className="font-bold text-sm italic text-primary-700 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                      >
-                        {popupContent.species.scientificName}
-                      </Link>
-                    ) : (
-                      <h3 className="font-bold text-sm italic text-gray-900 dark:text-gray-100">
-                        {popupContent.species?.scientificName || 'Unknown Species'}
-                      </h3>
-                    )}
-                    {popupContent.species?.commonName && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                        {popupContent.species.commonName}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={closePopup}
-                    className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="p-3 space-y-2 text-xs">
-                  {popupContent.location && (
-                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                      <MapPin size={14} className="text-gray-400 flex-shrink-0" />
-                      <span>{popupContent.location}</span>
-                    </div>
-                  )}
-                  {popupContent.foundAt && (
-                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                      <Calendar size={14} className="text-gray-400 flex-shrink-0" />
-                      <span>{new Date(popupContent.foundAt).toLocaleDateString()}</span>
-                    </div>
-                  )}
-                  {popupContent.quantity && (
-                    <p className="text-gray-700 dark:text-gray-300">
-                      <span className="font-medium">Quantity:</span> {popupContent.quantity}
-                    </p>
-                  )}
-                  {popupContent.species?.edibility && (
-                    <p>
-                      <span className={getEdibilityBadgeClasses(popupContent.species.edibility, 'sm')}>
-                        {popupContent.species.edibility}
-                      </span>
-                    </p>
-                  )}
-                </div>
-                <div className="border-t border-gray-200 dark:border-gray-700">
-                  {popupContent.id && showViewDetailsLink && (
-                    <div className="p-3">
-                      <Link
-                        to={`/findings/${popupContent.id}`}
-                        className="btn-secondary text-xs flex items-center gap-1 justify-center w-full"
-                      >
-                        <Eye size={14} />
-                        View Details
-                      </Link>
-                    </div>
-                  )}
-                  {showAddFindingPopup && onEmptyMapClick && popupContent.markerCoordinates && (
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        onClick={() => {
-                          const [lon, lat] = toLonLat(popupContent.markerCoordinates);
-                          onEmptyMapClick(popupContent.markerCoordinates, {
-                            latitude: lat,
-                            longitude: lon,
-                          });
-                        }}
-                        className="btn-primary text-xs flex items-center gap-2 justify-center w-full"
-                      >
-                        <Plus size={14} />
-                        Add Finding at This Location
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
+              <FindingMarkerPopup
+                popupContent={popupContent}
+                onClose={closePopup}
+                showViewDetailsLink={showViewDetailsLink}
+                showAddFindingPopup={showAddFindingPopup}
+                onAddFinding={onEmptyMapClick}
+              />
             )}
-          </div>
+          </>
         )}
       </div>
 
       {/* Controls */}
-      <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1000 }}>
-        <div className="flex flex-col gap-2">
-          {/* Layer Control */}
-          <button
-            type="button"
-            onClick={() => setShowLayerPanel(!showLayerPanel)}
-            className="map-control-button layer-switch-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border border-gray-300 dark:border-gray-600 transition-colors"
-            title="Change map layer"
-          >
-            <Layers size={20} className="text-gray-700 dark:text-gray-300" />
-          </button>
-
-          {/* Location Control */}
-          {showLocationControl && (
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={toggleLocationTracking}
-                className={`map-control-button location-tracking-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border transition-colors ${
-                  isTrackingLocation
-                    ? 'border-primary-500 dark:border-primary-600'
-                    : 'border-gray-300 dark:border-gray-600'
-                }`}
-                title={isTrackingLocation ? 'Stop tracking location' : 'Track my location'}
-              >
-                <MapPin
-                  size={20}
-                  className={isTrackingLocation ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}
-                />
-              </button>
-              {isTrackingLocation && (
-                <button
-                  type="button"
-                  onClick={centerOnLocation}
-                  className="map-control-button bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded shadow-md border border-gray-300 dark:border-gray-600 transition-colors"
-                  title="Center on my location"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700 dark:text-gray-300">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                </button>
-              )}
-            </div>
-          )}
-
-          {showLayerPanel && (
-            <div className="bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-300 dark:border-gray-600 overflow-hidden min-w-[140px]">
-              {Object.entries(SWISS_LAYERS).map(([key, layer]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleLayerChange(key)}
-                  className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                    currentLayer === key
-                      ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-900 dark:text-primary-300 font-medium'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  {layer.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      <MapControls
+        currentLayer={currentLayer}
+        showLayerPanel={showLayerPanel}
+        onToggleLayerPanel={toggleLayerPanel}
+        onLayerChange={handleLayerChange}
+        showLocationControl={showLocationControl}
+        isTrackingLocation={isTrackingLocation}
+        onToggleLocationTracking={toggleLocationTracking}
+        onCenterOnLocation={centerOnLocation}
+      />
 
       {/* Location Error Toast */}
-      {locationError && (
-        <div style={{ position: 'absolute', bottom: '10px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 px-4 py-2 rounded shadow-lg text-sm max-w-xs">
-            {locationError}
-          </div>
-        </div>
-      )}
+      <LocationErrorToast error={locationError} />
     </div>
   );
 }
