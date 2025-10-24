@@ -15,7 +15,6 @@ function AddFinding() {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [mapPosition, setMapPosition] = useState(() => fromLonLat([8.2275, 46.8182])); // Switzerland center in EPSG:3857
 
   const {
     register,
@@ -37,14 +36,14 @@ function AddFinding() {
     },
   });
 
-  // If coordinates came from map, fetch location name and update map position
+  // If coordinates came from map, fetch location name (but don't update map position - keep it centered on Switzerland)
   useEffect(() => {
     if (location.state?.fromMap && location.state?.latitude && location.state?.longitude) {
       const lat = location.state.latitude;
       const lon = location.state.longitude;
 
-      // Update map position
-      setMapPosition(fromLonLat([lon, lat]));
+      // Don't update map position - keep it showing whole Switzerland
+      // User can see the marker on the map at the clicked position
 
       // Fetch location name via reverse geocoding
       reverseGeocode(lat, lon);
@@ -135,7 +134,6 @@ function AddFinding() {
 
     setValue('latitude', latFixed);
     setValue('longitude', lonFixed);
-    setMapPosition(coordinate); // Store LV95 coordinates for map
 
     // Try to get location name
     const locationName = await reverseGeocode(lat, lon);
@@ -158,10 +156,6 @@ function AddFinding() {
 
         setValue('latitude', lat);
         setValue('longitude', lon);
-
-        // Convert to EPSG:3857 for map display
-        const coords3857 = fromLonLat([position.coords.longitude, position.coords.latitude]);
-        setMapPosition(coords3857);
 
         // Try to get location name
         const locationName = await reverseGeocode(lat, lon);
@@ -345,11 +339,10 @@ function AddFinding() {
                 </div>
                 <div style={{ height: '400px', position: 'relative' }}>
                   <SwissMap
-                    center={mapPosition}
                     zoom={8}
                     onMapClick={handleMapLocationSelect}
                     markers={watch('latitude') && watch('longitude') ? [{
-                      coordinates: mapPosition,
+                      coordinates: fromLonLat([parseFloat(watch('longitude')), parseFloat(watch('latitude'))]),
                       color: getEdibilityMarkerColor(selectedSpecies?.edibility),
                     }] : []}
                     style={{ height: '100%', width: '100%' }}

@@ -2,9 +2,9 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, MapPin, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { fromLonLat } from 'ol/proj';
 import { speciesAPI, findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
-import { wgs84ToLV95 } from '../utils/projections';
 import { getEdibilityBadgeClasses, getEdibilityMarkerColor } from '../utils/edibilityBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -226,13 +226,33 @@ function SpeciesDetail() {
             </div>
             <div style={{ height: '400px', position: 'relative' }}>
               <SwissMap
-                center={wgs84ToLV95(
-                  parseFloat(findingsData.findings[0].latitude),
-                  parseFloat(findingsData.findings[0].longitude)
-                )}
-                zoom={8}
+                center={(() => {
+                  // Calculate center point of all findings
+                  const lats = findingsData.findings.map(f => parseFloat(f.latitude));
+                  const lons = findingsData.findings.map(f => parseFloat(f.longitude));
+                  const avgLat = lats.reduce((a, b) => a + b, 0) / lats.length;
+                  const avgLon = lons.reduce((a, b) => a + b, 0) / lons.length;
+                  return fromLonLat([avgLon, avgLat]);
+                })()}
+                zoom={(() => {
+                  // Calculate appropriate zoom level based on spread of findings
+                  if (findingsData.findings.length === 1) return 14;
+
+                  const lats = findingsData.findings.map(f => parseFloat(f.latitude));
+                  const lons = findingsData.findings.map(f => parseFloat(f.longitude));
+                  const latSpread = Math.max(...lats) - Math.min(...lats);
+                  const lonSpread = Math.max(...lons) - Math.min(...lons);
+                  const maxSpread = Math.max(latSpread, lonSpread);
+
+                  // Rough zoom level calculation (smaller spread = higher zoom)
+                  if (maxSpread < 0.01) return 14;
+                  if (maxSpread < 0.05) return 12;
+                  if (maxSpread < 0.1) return 11;
+                  if (maxSpread < 0.5) return 10;
+                  if (maxSpread < 1) return 9;
+                  return 8;
+                })()}
                 markers={findingsData.findings.map((finding) => ({
-                  coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
                   color: getEdibilityMarkerColor(species.edibility),
                   data: finding,
                 }))}

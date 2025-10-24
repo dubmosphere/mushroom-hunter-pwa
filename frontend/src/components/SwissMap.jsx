@@ -261,7 +261,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
       }
       map.setTarget(null);
     };
-  }, [mapCenter, zoom, showAddFindingPopup, onEmptyMapClick, currentLayer]);
+  }, [mapCenter, zoom, showAddFindingPopup, onEmptyMapClick]);
 
   // Update markers when they change
   useEffect(() => {
@@ -270,7 +270,12 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
     const map = mapInstance.current;
     const layers = map.getLayers();
     const vectorLayer = layers.item(1); // Vector layer is second
+
+    // Safety check: ensure vector layer exists
+    if (!vectorLayer) return;
+
     const vectorSource = vectorLayer.getSource();
+    if (!vectorSource) return;
 
     // Clear existing markers
     vectorSource.clear();
@@ -294,7 +299,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
         vectorSource.addFeature(feature);
       });
     }
-  }, [markers]);
+  }, [markers, currentLayer]);
 
   // Update layer when changed
   useEffect(() => {
@@ -313,7 +318,7 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
     };
 
     tileLayer.setSource(createXYZSource(SWISS_LAYERS[currentLayer].layer));
-    tileLayer.setExtent(extent);
+    // Don't reset extent on layer change - it should remain constant
   }, [currentLayer]);
 
   const handleLayerChange = (layerKey) => {

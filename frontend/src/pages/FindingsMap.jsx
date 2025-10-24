@@ -77,7 +77,7 @@ function FindingsMap() {
         </div>
         <div style={{ height: '600px', width: '100%', position: 'relative' }}>
           <SwissMap
-            zoom={9}
+            zoom={7}
             onEmptyMapClick={handleAddFindingClick}
             showAddFindingPopup={true}
             markers={findings?.map((finding) => ({

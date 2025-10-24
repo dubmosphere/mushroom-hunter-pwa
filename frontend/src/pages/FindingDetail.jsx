@@ -2,9 +2,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, MapPin, Calendar, Thermometer, Cloud, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { fromLonLat } from 'ol/proj';
 import { findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
-import { wgs84ToLV95 } from '../utils/projections';
 import { getEdibilityBadgeClasses, getEdibilityMarkerColor } from '../utils/edibilityBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -200,10 +200,9 @@ function FindingDetail() {
           </div>
           <div style={{ height: '400px', position: 'relative' }}>
             <SwissMap
-              center={wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude))}
-              zoom={12}
+              center={fromLonLat([parseFloat(finding.longitude), parseFloat(finding.latitude)])}
+              zoom={14}
               markers={[{
-                coordinates: wgs84ToLV95(parseFloat(finding.latitude), parseFloat(finding.longitude)),
                 color: getEdibilityMarkerColor(finding.species.edibility),
                 data: finding,
               }]}
