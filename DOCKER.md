@@ -65,9 +65,6 @@ docker-compose logs -f
 ### 4. Initialize the Database
 
 ```bash
-# Run database migrations
-docker-compose exec backend npm run migrate
-
 # Seed initial data (optional)
 docker-compose exec backend npm run seed
 ```
@@ -251,6 +248,18 @@ docker-compose restart backend
 # Access PostgreSQL CLI
 docker-compose exec db psql -U postgres -d mushroom_hunter
 
+# Seed database with initial data
+docker-compose exec -T backend npm run seed
+
+# Import species data from CSV
+docker-compose exec -T backend npm run import
+
+# Generate test findings for development
+docker-compose exec -T backend npm run generate-test-findings
+
+# Check for orphaned findings (missing species)
+docker-compose exec -T backend npm run check-orphaned-findings
+
 # Backup database
 docker-compose exec db pg_dump -U postgres mushroom_hunter > backup.sql
 
@@ -260,6 +269,8 @@ cat backup.sql | docker-compose exec -T db psql -U postgres -d mushroom_hunter
 # View database logs
 docker-compose logs db
 ```
+
+**Note**: The `-T` flag disables pseudo-TTY allocation, which is necessary when piping input/output or running non-interactive commands.
 
 ## Development Workflow
 
@@ -306,18 +317,47 @@ Then rebuild for production:
 docker-compose up -d --build
 ```
 
-### Running Database Migrations
+### Running Database Scripts
 
 ```bash
 # Run migrations
-docker-compose exec backend npm run migrate
+docker-compose exec -T backend npm run migrate
 
 # Run seeds
-docker-compose exec backend npm run seed
+docker-compose exec -T backend npm run seed
 
 # Import species data
-docker-compose exec backend npm run import
+docker-compose exec -T backend npm run import
+
+# Generate test findings
+docker-compose exec -T backend npm run generate-test-findings
+
+# Check for orphaned findings
+docker-compose exec -T backend npm run check-orphaned-findings
 ```
+
+### Updating npm Scripts
+
+When you add new scripts to `package.json`, you must rebuild the container:
+
+**Important**: The `package.json` file is copied during Docker image build, not mounted as a volume. Changes to `package.json` on your host won't automatically appear in the running container.
+
+```bash
+# After modifying package.json or package-lock.json
+docker-compose build backend
+
+# Restart services
+docker-compose down && docker-compose up -d
+```
+
+**Files that require rebuild**:
+- `package.json` (scripts or dependencies)
+- `package-lock.json`
+- Backend source files (unless mounted as volumes)
+
+**Files that update automatically** (mounted as volumes):
+- Frontend: `src/` directory and `vite.config.js`
+- Backend: None by default (production setup)
 
 ## Production Deployment
 

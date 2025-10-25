@@ -9,7 +9,9 @@
     "dev": "nodemon src/server.js",
     "migrate": "node src/db/migrate.js",
     "seed": "node src/db/seed.js",
-    "import": "node scripts/import-species.js"
+    "import": "node scripts/import-species.js",
+    "generate-test-findings": "node scripts/generate-test-findings.js",
+    "check-orphaned-findings": "node scripts/check-orphaned-findings.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
