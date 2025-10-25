@@ -252,6 +252,7 @@ docker-compose exec db psql -U postgres -d mushroom_hunter
 docker-compose exec -T backend npm run seed
 
 # Import species data from CSV
+# Note: Requires import.csv file in backend/import/ directory
 docker-compose exec -T backend npm run import
 
 # Generate test findings for development
@@ -433,6 +434,26 @@ server {
 ```
 
 ## Troubleshooting
+
+### Import CSV File Not Found
+
+**Error**: `Import failed: Error: CSV file not found: /app/import/import.csv`
+
+**Cause**: The `backend/import/` directory is mounted as a read-only volume. If the CSV file doesn't exist on your host, it won't be available in the container.
+
+**Solution**:
+1. Ensure the CSV file exists at `backend/import/import.csv` on your host machine
+2. The directory is automatically mounted via docker-compose.yml
+3. Restart if you just added the file: `docker-compose restart backend`
+
+**Verify**:
+```bash
+# Check if file exists on host
+ls -la backend/import/import.csv
+
+# Check if file is accessible in container
+docker exec mushroom-hunter-backend ls -la /app/import/
+```
 
 ### Port Already in Use
 
