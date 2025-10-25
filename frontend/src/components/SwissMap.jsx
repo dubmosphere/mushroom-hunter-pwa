@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
@@ -60,11 +60,150 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
   const [currentLayer, setCurrentLayer] = useState('color');
   const [showLayerPanel, setShowLayerPanel] = useState(false);
   const [popupContent, setPopupContent] = useState(null);
+
+  // Helper function to ensure popup is visible after rendering
+  const ensurePopupVisible = useCallback(() => {
+    if (!mapInstance.current || !overlayRef.current || !popupRef.current) {
+      console.log('[PopupPan] Skipping: missing refs', {
+        hasMap: !!mapInstance.current,
+        hasOverlay: !!overlayRef.current,
+        hasPopup: !!popupRef.current
+      });
+      return;
+    }
+
+    // Wait for popup to render - using double requestAnimationFrame for reliability
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const map = mapInstance.current;
+        const overlay = overlayRef.current;
+        const popupElement = popupRef.current;
+
+        const position = overlay.getPosition();
+        if (!position) {
+          console.log('[PopupPan] No overlay position');
+          return;
+        }
+
+        // Get popup dimensions
+        const popupRect = popupElement.getBoundingClientRect();
+        const mapSize = map.getSize();
+
+        // Get pixel position of the overlay
+        const pixel = map.getPixelFromCoordinate(position);
+
+        console.log('[PopupPan] Calculated dimensions:', {
+          popupRect: {
+            width: popupRect.width,
+            height: popupRect.height,
+            top: popupRect.top,
+            left: popupRect.left
+          },
+          mapSize,
+          pixel
+        });
+
+        if (!pixel || !mapSize) {
+          console.log('[PopupPan] Missing pixel or mapSize');
+          return;
+        }
+
+        // Check if popup has been rendered (has actual dimensions)
+        if (popupRect.width === 0 || popupRect.height === 0) {
+          console.log('[PopupPan] Popup not yet rendered (zero dimensions), retrying...');
+          // Retry after a short delay
+          setTimeout(() => ensurePopupVisible(), 50);
+          return;
+        }
+
+        const margin = 100; // Increased margin for better spacing
+        let needsPan = false;
+        let panX = 0;
+        let panY = 0;
+
+        // Check if popup extends beyond viewport edges
+        const popupLeft = pixel[0] - popupRect.width / 2;
+        const popupRight = pixel[0] + popupRect.width / 2;
+        const popupTop = pixel[1] - popupRect.height - 40; // Account for offset
+        const popupBottom = pixel[1];
+
+        console.log('[PopupPan] Edge positions:', {
+          popupLeft,
+          popupRight,
+          popupTop,
+          popupBottom,
+          viewportWidth: mapSize[0],
+          viewportHeight: mapSize[1]
+        });
+
+        // Check left edge
+        if (popupLeft < margin) {
+          panX = margin - popupLeft;
+          needsPan = true;
+          console.log('[PopupPan] Left edge violation:', { popupLeft, margin, panX });
+        }
+        // Check right edge
+        if (popupRight > mapSize[0] - margin) {
+          panX = mapSize[0] - margin - popupRight;
+          needsPan = true;
+          console.log('[PopupPan] Right edge violation:', { popupRight, limit: mapSize[0] - margin, panX });
+        }
+        // Check top edge (most important for your case)
+        if (popupTop < margin) {
+          panY = margin - popupTop;
+          needsPan = true;
+          console.log('[PopupPan] Top edge violation:', { popupTop, margin, panY });
+        }
+        // Check bottom edge
+        if (popupBottom > mapSize[1] - margin) {
+          panY = mapSize[1] - margin - popupBottom;
+          needsPan = true;
+          console.log('[PopupPan] Bottom edge violation:', { popupBottom, limit: mapSize[1] - margin, panY });
+        }
+
+        if (needsPan) {
+          const view = map.getView();
+          const center = view.getCenter();
+          const resolution = view.getResolution();
+
+          // Calculate new center
+          const newCenter = [
+            center[0] - panX * resolution,
+            center[1] + panY * resolution
+          ];
+
+          console.log('[PopupPan] Panning map:', {
+            panX,
+            panY,
+            oldCenter: center,
+            newCenter,
+            resolution
+          });
+
+          // Animate to new position
+          view.animate({
+            center: newCenter,
+            duration: 250,
+          });
+        } else {
+          console.log('[PopupPan] No panning needed - popup is fully visible');
+        }
+      });
+    });
+  }, []);
+
   const [isTrackingLocation, setIsTrackingLocation] = useState(false);
   const [locationError, setLocationError] = useState(null);
 
   // Default center if not provided - use calculated center from extent
   const mapCenter = center || swissCenterCoords;
+
+  // Ensure popup is visible when content changes
+  useEffect(() => {
+    if (popupContent) {
+      ensurePopupVisible();
+    }
+  }, [popupContent, ensurePopupVisible]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -136,11 +275,11 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
     if (popupRef.current) {
       const overlay = new Overlay({
         element: popupRef.current,
-        autoPan: {
-          animation: {
-            duration: 250,
-          },
+        autoPan: true,
+        autoPanAnimation: {
+          duration: 250,
         },
+        autoPanMargin: 80, // Minimum margin around popup in pixels (increased for better visibility)
         positioning: 'bottom-center',
         offset: [0, -20],
       });
