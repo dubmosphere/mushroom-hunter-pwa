@@ -166,11 +166,17 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
 
           setPopupContent({
             className: 'ol-popup-user-location',
-            isUserLocation: true,
-            latitude: latitude,
-            longitude: longitude,
-            accuracy: accuracy,
-            coordinates: markerCoordinate,
+            Component: UserLocationPopup,
+            props: {
+              popupContent: {
+                latitude: latitude,
+                longitude: longitude,
+                accuracy: accuracy,
+                coordinates: markerCoordinate,
+              },
+              onClose: closePopup,
+              onAddFinding: onEmptyMapClick,
+            },
           });
           overlayRef.current?.setPosition(markerCoordinate);
         } else {
@@ -183,8 +189,17 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
             // Include coordinates in popup content for "Add Finding" button
             setPopupContent({
               className: 'ol-popup-finding-marker',
-              ...data,
-              markerCoordinates: markerCoordinate,
+              Component: FindingMarkerPopup,
+              props: {
+                popupContent: {
+                  ...data,
+                  markerCoordinates: markerCoordinate,
+                },
+                onClose: closePopup,
+                showViewDetailsLink: showViewDetailsLink,
+                showAddFindingPopup: showAddFindingPopup,
+                onAddFinding: onEmptyMapClick,
+              },
             });
             overlayRef.current?.setPosition(markerCoordinate);
 
@@ -204,10 +219,16 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
 
           setPopupContent({
             className: 'ol-popup-add-finding',
-            isAddFinding: true,
-            latitude: lat,
-            longitude: lon,
-            coordinates: event.coordinate,
+            Component: AddFindingPopup,
+            props: {
+              popupContent: {
+                latitude: lat,
+                longitude: lon,
+                coordinates: event.coordinate,
+              },
+              onClose: closePopup,
+              onAddFinding: onEmptyMapClick,
+            },
           });
           overlayRef.current?.setPosition(event.coordinate);
 
@@ -488,30 +509,8 @@ function SwissMap({ center, zoom = 8, onMapClick, onEmptyMapClick, markers = [],
 
       {/* Popup Overlay */}
       <div ref={popupRef} className={`ol-popup ${popupContent?.className || ''}`}>
-        {popupContent && (
-          <>
-            {popupContent.isUserLocation ? (
-              <UserLocationPopup
-                popupContent={popupContent}
-                onClose={closePopup}
-                onAddFinding={onEmptyMapClick}
-              />
-            ) : popupContent.isAddFinding ? (
-              <AddFindingPopup
-                popupContent={popupContent}
-                onClose={closePopup}
-                onAddFinding={onEmptyMapClick}
-              />
-            ) : (
-              <FindingMarkerPopup
-                popupContent={popupContent}
-                onClose={closePopup}
-                showViewDetailsLink={showViewDetailsLink}
-                showAddFindingPopup={showAddFindingPopup}
-                onAddFinding={onEmptyMapClick}
-              />
-            )}
-          </>
+        {popupContent && popupContent.Component && (
+          <popupContent.Component {...popupContent.props} />
         )}
       </div>
 
