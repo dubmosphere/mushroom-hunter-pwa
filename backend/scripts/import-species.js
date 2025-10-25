@@ -457,7 +457,7 @@ async function importSpeciesData() {
     await loadExistingData();
 
     // Read and process CSV file
-    const csvFilePath = path.join(__dirname, '../../import/import.csv');
+    const csvFilePath = path.join(__dirname, '../import/import.csv');
 
     if (!fs.existsSync(csvFilePath)) {
       throw new Error(`CSV file not found: ${csvFilePath}`);
