@@ -5,6 +5,7 @@ import { authAPI } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import ErrorAlert from '../components/ErrorAlert';
 import { useSmartNavigation } from '../hooks/useSmartNavigation';
+import Logo from '../components/Logo';
 
 function Register() {
   const { goBack } = useSmartNavigation('/');
@@ -41,6 +42,9 @@ function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900 px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Logo size="xl" />
+          </div>
           <h1 className="text-4xl font-bold text-primary-800 dark:text-primary-400 mb-2">
             Mushroom Hunter
           </h1>

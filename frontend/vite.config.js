@@ -8,12 +8,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mushroom-logo.svg', 'favicon-16x16.png', 'favicon-32x32.png', 'icon-192x192.png', 'icon-512x512.png'],
       manifest: {
         name: 'Mushroom Hunter',
         short_name: 'MushroomHunter',
         description: 'Progressive Web App for mushroom hunters in Switzerland',
-        theme_color: '#2d5016',
+        theme_color: '#dc2626',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
@@ -21,17 +21,17 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

@@ -3,6 +3,7 @@ import { Home, Search, MapPin, List, LogOut, Moon, Sun } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
 import { authAPI } from '../utils/api';
+import Logo from './Logo';
 
 function Layout() {
   const navigate = useNavigate();
@@ -28,8 +29,9 @@ function Layout() {
       <header className="bg-primary-700 dark:bg-gray-800 text-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold">
-              Mushroom Hunter
+            <Link to="/" className="flex items-center gap-3">
+              <Logo size="md" />
+              <span className="text-2xl font-bold">Mushroom Hunter</span>
             </Link>
             <div className="flex items-center gap-4">
               <span className="text-sm">Welcome, {user?.username}</span>
