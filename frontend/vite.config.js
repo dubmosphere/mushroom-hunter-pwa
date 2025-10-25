@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
 
 export default defineConfig({
   plugins: [
@@ -74,8 +75,14 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        // Use 'backend' service name for Docker networking
-        target: 'http://backend:5000',
+        // Auto-detect: Use 'backend' service name in Docker, localhost otherwise
+        // Docker detection: Check for /.dockerenv file or DOCKER_ENV variable
+        target: (() => {
+          const isDocker = fs.existsSync('/.dockerenv') || process.env.DOCKER_ENV === 'true';
+          const target = isDocker ? 'http://backend:5000' : 'http://localhost:5000';
+          console.log(`[Vite] Running in ${isDocker ? 'Docker' : 'local'} mode, API target: ${target}`);
+          return target;
+        })(),
         changeOrigin: true,
         secure: false
       }
