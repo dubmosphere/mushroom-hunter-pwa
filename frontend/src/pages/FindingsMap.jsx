@@ -75,7 +75,7 @@ function FindingsMap() {
             💡 Tip: Click anywhere on the map to add a new finding at that location
           </p>
         </div>
-        <div style={{ height: '600px', width: '100%', position: 'relative' }}>
+        <div style={{ height: 'calc(100vh - 250px)', minHeight: '600px', width: '100%', position: 'relative' }}>
           <SwissMap
             zoom={7}
             onEmptyMapClick={handleAddFindingClick}

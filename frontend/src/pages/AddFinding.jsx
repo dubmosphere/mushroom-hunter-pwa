@@ -346,7 +346,7 @@ function AddFinding() {
                 <div className="bg-primary-50 dark:bg-primary-900/20 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-300 dark:border-gray-600">
                   Click on the map to set the location
                 </div>
-                <div style={{ height: '400px', position: 'relative' }}>
+                <div style={{ height: '500px', position: 'relative' }}>
                   <SwissMap
                     zoom={8}
                     onMapClick={handleMapLocationSelect}

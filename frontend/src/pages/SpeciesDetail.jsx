@@ -254,7 +254,7 @@ function SpeciesDetail() {
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold">Findings Map</h2>
             </div>
-            <div style={{ height: '400px', position: 'relative' }}>
+            <div style={{ height: '500px', position: 'relative' }}>
               <SwissMap
                 center={(() => {
                   // Calculate center point of all findings
