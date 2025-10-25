@@ -75,7 +75,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         // Use 'backend' service name for Docker networking
-        target: 'http://localhost:5000',
+        target: 'http://backend:5000',
         changeOrigin: true,
         secure: false
       }

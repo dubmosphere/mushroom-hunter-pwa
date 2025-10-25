@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from './store/authStore';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -13,7 +13,14 @@ import FindingDetail from './pages/FindingDetail';
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    // Save the location they were trying to access
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
 }
 
 function App() {
