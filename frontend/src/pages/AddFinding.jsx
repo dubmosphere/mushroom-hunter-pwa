@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, MapPin, Map as MapIcon } from 'lucide-react';
@@ -7,11 +7,12 @@ import { findingsAPI, speciesAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { fromLonLat, toLonLat } from 'ol/proj';
 import { getEdibilityMarkerColor } from '../utils/edibilityBadge';
+import { useSmartNavigation } from '../hooks/useSmartNavigation';
 
 function AddFinding() {
-  const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { goBack, handleBackClick, getLinkTo } = useSmartNavigation('/findings');
   const [gettingLocation, setGettingLocation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMap, setShowMap] = useState(false);
@@ -78,7 +79,11 @@ function AddFinding() {
     onSuccess: () => {
       // Invalidate and refetch findings queries
       queryClient.invalidateQueries({ queryKey: ['findings'] });
-      navigate('/findings', { replace: true });
+      queryClient.invalidateQueries({ queryKey: ['species'] });
+
+      // Navigate back using smart navigation
+      goBack();
+
       // Scroll to top after navigation
       setTimeout(() => window.scrollTo(0, 0), 0);
     },
@@ -197,9 +202,13 @@ function AddFinding() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Link to="/findings" className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6">
+      <Link
+        to={getLinkTo()}
+        onClick={handleBackClick}
+        className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6"
+      >
         <ArrowLeft size={20} />
-        Back to My Findings
+        Back
       </Link>
 
       <div className="card">
@@ -445,7 +454,11 @@ function AddFinding() {
             >
               {createMutation.isPending ? 'Saving...' : 'Save Finding'}
             </button>
-            <Link to="/findings" className="btn-secondary">
+            <Link
+              to={getLinkTo()}
+              onClick={handleBackClick}
+              className="btn-secondary"
+            >
               Cancel
             </Link>
           </div>

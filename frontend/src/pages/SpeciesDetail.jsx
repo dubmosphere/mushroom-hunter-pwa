@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, MapPin, Calendar, Eye } from 'lucide-react';
 import { format } from 'date-fns';
@@ -7,9 +7,24 @@ import { speciesAPI, findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { getEdibilityBadgeClasses, getEdibilityMarkerColor } from '../utils/edibilityBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useSmartNavigation } from '../hooks/useSmartNavigation';
 
 function SpeciesDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { handleBackClick, getLinkTo } = useSmartNavigation('/species');
+
+  const handleAddFindingClick = (_coordinate, locationInfo) => {
+    // Navigate to add finding page with coordinates and species pre-filled
+    navigate('/findings/new', {
+      state: {
+        latitude: locationInfo.latitude,
+        longitude: locationInfo.longitude,
+        speciesId: id,
+        fromMap: true,
+      }
+    });
+  };
 
   const { data: species, isLoading } = useQuery({
     queryKey: ['species', id],
@@ -38,8 +53,19 @@ function SpeciesDetail() {
 
   if (!species) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600 dark:text-gray-400">Species not found</p>
+      <div className="max-w-4xl mx-auto">
+        <Link
+          to={getLinkTo()}
+          onClick={handleBackClick}
+          className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6"
+        >
+          <ArrowLeft size={20} />
+          Back
+        </Link>
+        <div className="card bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-center py-12">
+          <p className="text-red-700 dark:text-red-400 text-lg font-semibold mb-2">Species not found</p>
+          <p className="text-gray-600 dark:text-gray-400">This species may have been deleted or the ID is invalid.</p>
+        </div>
       </div>
     );
   }
@@ -51,9 +77,13 @@ function SpeciesDetail() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Link to="/species" className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6">
+      <Link
+        to={getLinkTo()}
+        onClick={handleBackClick}
+        className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-6"
+      >
         <ArrowLeft size={20} />
-        Back to Species Explorer
+        Back
       </Link>
 
       <div className="card">
@@ -256,6 +286,8 @@ function SpeciesDetail() {
                   color: getEdibilityMarkerColor(species.edibility),
                   data: finding,
                 }))}
+                onEmptyMapClick={handleAddFindingClick}
+                showAddFindingPopup={true}
                 style={{ height: '100%', width: '100%' }}
               />
             </div>

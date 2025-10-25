@@ -7,11 +7,25 @@ import { findingsAPI } from '../utils/api';
 import SwissMap from '../components/SwissMap';
 import { getEdibilityBadgeClasses, getEdibilityMarkerColor } from '../utils/edibilityBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useSmartNavigation } from '../hooks/useSmartNavigation';
 
 function FindingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { handleBackClick, getLinkTo } = useSmartNavigation('/findings');
+
+  const handleAddFindingClick = (_coordinate, locationInfo) => {
+    // Navigate to add finding page with coordinates and species pre-filled
+    navigate('/findings/new', {
+      state: {
+        latitude: locationInfo.latitude,
+        longitude: locationInfo.longitude,
+        speciesId: finding.species.id,
+        fromMap: true,
+      }
+    });
+  };
 
   const { data: finding, isLoading, error } = useQuery({
     queryKey: ['finding', id],
@@ -60,9 +74,13 @@ function FindingDetail() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <Link to="/findings" className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+        <Link
+          to={getLinkTo()}
+          onClick={handleBackClick}
+          className="inline-flex items-center gap-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+        >
           <ArrowLeft size={20} />
-          Back to My Findings
+          Back
         </Link>
         <div className="flex gap-2">
           <button
@@ -207,6 +225,8 @@ function FindingDetail() {
                 data: finding,
               }]}
               showViewDetailsLink={false}
+              onEmptyMapClick={handleAddFindingClick}
+              showAddFindingPopup={true}
               style={{ height: '100%', width: '100%' }}
             />
           </div>

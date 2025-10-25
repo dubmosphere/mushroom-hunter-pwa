@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { authAPI } from '../utils/api';
 import useAuthStore from '../store/authStore';
 import ErrorAlert from '../components/ErrorAlert';
+import { useSmartNavigation } from '../hooks/useSmartNavigation';
 
 function Login() {
-  const navigate = useNavigate();
+  const { goBack } = useSmartNavigation('/');
   const setAuth = useAuthStore((state) => state.setAuth);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ function Login() {
       const response = await authAPI.login(data);
       // Token is now in httpOnly cookie, only store user data
       setAuth(response.data.user);
-      navigate('/');
+      goBack();
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
